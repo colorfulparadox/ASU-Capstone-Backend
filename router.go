@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 
+	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
 	"github.com/jackc/pgx/v5/pgxpool"
 )
@@ -21,6 +22,11 @@ func new_router(
 	pool *pgxpool.Pool,
 ) Router {
 	router := gin.Default()
+
+	config := cors.DefaultConfig()
+	config.AllowAllOrigins = true //we will want to disable that some day
+	router.Use(cors.New(config))
+
 	return Router{ip: ip, port: port, pool: pool, router: router}
 }
 

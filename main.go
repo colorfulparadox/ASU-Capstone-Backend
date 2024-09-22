@@ -27,7 +27,7 @@ func main() {
 	}
 	defer conn.Close()
 
-	router := new_router("localhost", "4040", conn)
+	router := new_router("192.168.0.60", "4040", conn)
 
 	add_route(&router, Receiver{
 		route:        "/getmsg",
@@ -48,8 +48,13 @@ func main() {
 		authRequired: false,
 		routeType:    RoutePost,
 		sender: func(gc *gin.Context, pool *pgxpool.Pool) {
+			fmt.Println("login req")
 			body := gc.Request.Body
+			if err != nil {
+				fmt.Fprintf(os.Stderr, "Error: %v", err)
+			}
 			fmt.Println(body)
+
 			gc.JSON(http.StatusOK, "{\"auth\":\"thisisakey123\"}")
 		},
 	})

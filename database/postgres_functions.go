@@ -78,7 +78,7 @@ func pgx_examples() {
 	Retrieve_User("none")
 }
 
-//Example for setting up connection============================================================
+//Function for setting up connection============================================================
 
 func establish_connection() (conn *pgxpool.Pool, err error) {
 	// Set up connection to the PostgreSQL server
@@ -89,7 +89,7 @@ func establish_connection() (conn *pgxpool.Pool, err error) {
 	return
 }
 
-//Example for creating tables==================================================================
+//Function for creating tables==================================================================
 
 func Create_Tables() {
 	conn, err := establish_connection()
@@ -102,7 +102,7 @@ func Create_Tables() {
 	}
 }
 
-//Example for adding user data including auth token============================================
+//Function for adding user data including auth token============================================
 
 func Create_User(user User) {
 	conn, err := establish_connection()
@@ -131,7 +131,7 @@ func Create_User(user User) {
 	fmt.Printf("User inserted with ID: %d\n", userID)
 }
 
-//Example for editing user data================================================================
+//Function for editing user data================================================================
 
 func Update_User(username string, user User) {
 	conn, err := establish_connection()
@@ -169,7 +169,7 @@ func Update_User(username string, user User) {
 	fmt.Printf("User: %s, New Name: %s New Username: %s\n", username, user.Name, user.Username)
 }
 
-//Example for retrieving user data=============================================================
+//Function for retrieving user data=============================================================
 
 func Retrieve_User(username string) (user User) {
 	conn, err := establish_connection()

@@ -8,7 +8,7 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/jackc/pgx/v5"
+	"github.com/jackc/pgx/v5/pgxpool"
 )
 
 // User struct for holding users while working on them
@@ -80,9 +80,9 @@ func pgx_examples() {
 
 //Example for setting up connection============================================================
 
-func establish_connection() (conn *pgx.Conn, err error) {
+func establish_connection() (conn *pgxpool.Pool, err error) {
 	// Set up connection to the PostgreSQL server
-	conn, err = pgx.Connect(context.Background(), databaseUrl)
+	conn, err = pgxpool.New(context.Background(), databaseUrl)
 	if err != nil {
 		log.Fatalf("Unable to connect to database: %v\n", err)
 	}
@@ -93,7 +93,7 @@ func establish_connection() (conn *pgx.Conn, err error) {
 
 func Create_Tables() {
 	conn, err := establish_connection()
-	defer conn.Close(context.Background())
+	defer conn.Close()
 
 	// Create tables (if they don't exist)
 	_, err = conn.Exec(context.Background(), createTableSQL)
@@ -106,7 +106,7 @@ func Create_Tables() {
 
 func Create_User(user User) {
 	conn, err := establish_connection()
-	defer conn.Close(context.Background())
+	defer conn.Close()
 
 	compare_user := retrieve_user(conn, err, user.Username)
 	if compare_user.Username == user.Username {
@@ -135,7 +135,7 @@ func Create_User(user User) {
 
 func Update_User(username string, user User) {
 	conn, err := establish_connection()
-	defer conn.Close(context.Background())
+	defer conn.Close()
 
 	// This checks to see if username is connected to a real user
 	if retrieve_user(conn, err, username).Username != username {
@@ -173,7 +173,7 @@ func Update_User(username string, user User) {
 
 func Retrieve_User(username string) (user User) {
 	conn, err := establish_connection()
-	defer conn.Close(context.Background())
+	defer conn.Close()
 
 	// Prepare the SQL statement for selecting the user's data
 	// the id column is just here for completeness and should not be referenced in actual deployment
@@ -206,7 +206,7 @@ func Retrieve_User(username string) (user User) {
 
 //private version of the Rerieve_user function that uses conn and err so a new connection does not have to be made
 
-func retrieve_user(conn *pgx.Conn, err error, username string) (user User) {
+func retrieve_user(conn *pgxpool.Pool, err error, username string) (user User) {
 	// Prepare the SQL statement for selecting the user's data
 	// the id column is just here for completeness and should not be referenced in actual deployment
 	selectUserSQL := `

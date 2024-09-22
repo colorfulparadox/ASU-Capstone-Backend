@@ -20,9 +20,6 @@ type message struct {
 func main() {
 	databaseUrl := "postgres://project-persona:T%7D%3F_%5D0Lu8I98@postgres.blusnake.net:35432/project-persona"
 
-	// this returns connection pool
-	//dbPool, err := pgx.Connect(context.Background(), databaseUrl)
-
 	conn, err := pgxpool.New(context.Background(), databaseUrl)
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "Unable to connect to database: %v\n", err)
@@ -30,7 +27,7 @@ func main() {
 	}
 	defer conn.Close()
 
-	router := new_router("localhost", "8081", conn)
+	router := new_router("localhost", "4040", conn)
 
 	add_route(&router, Receiver{
 		route:        "/getmsg",
@@ -45,5 +42,17 @@ func main() {
 			gc.IndentedJSON(http.StatusOK, msg)
 		},
 	})
+
+	add_route(&router, Receiver{
+		route:        "/login",
+		authRequired: false,
+		routeType:    RoutePost,
+		sender: func(gc *gin.Context, pool *pgxpool.Pool) {
+			body := gc.Request.Body
+			fmt.Println(body)
+			gc.JSON(http.StatusOK, "{\"auth\":\"thisisakey123\"}")
+		},
+	})
+
 	run_router(router)
 }

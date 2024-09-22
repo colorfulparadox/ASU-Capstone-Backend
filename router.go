@@ -53,7 +53,19 @@ func run_router(router Router) {
 			})
 		}
 
-	}
+		if receiver.routeType == RoutePost {
+			if receiver.authRequired {
+				router.router.POST(receiver.route, verifyCookies(router), func(gc *gin.Context) {
+					receiver.sender(gc, router.pool)
+				})
+				continue
+			}
+			//for no cookie requests
+			router.router.POST(receiver.route, func(gc *gin.Context) {
+				receiver.sender(gc, router.pool)
+			})
+		}
 
+	}
 	router.router.Run(router.ip + ":" + router.port)
 }

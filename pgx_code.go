@@ -47,12 +47,12 @@ func pgx_examples() {
 	Create_Tables()
 
 	user := User{
-		Name:            "Jack",
-		Username:        "jack68",
-		Password:        "password3510",
+		Name:            "John Doe",
+		Username:        "johndoe",
+		Password:        "securepassword",
 		Points:          rand.IntN(1000),
 		PermissionLevel: 0,
-		Email:           "jack68@example.com",
+		Email:           "john.doe@example.com",
 		AuthToken:       strconv.Itoa(rand.IntN(1000000)),
 		DateIssued:      time.Now(),
 		DateExpr:        time.Now().AddDate(0, 1, 0),

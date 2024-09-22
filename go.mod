@@ -1,4 +1,4 @@
-module project-persona
+module BackEnd
 
 go 1.23.1
 

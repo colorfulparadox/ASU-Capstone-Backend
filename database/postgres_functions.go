@@ -1,11 +1,10 @@
-package main
+package database
 
 import (
 	"context"
 	"fmt"
 	"log"
 	"math/rand/v2"
-	"strconv"
 	"time"
 
 	"github.com/jackc/pgx/v5/pgxpool"
@@ -34,7 +33,7 @@ CREATE TABLE IF NOT EXISTS users (
     points INT NOT NULL DEFAULT 0,
     permission_level INT NOT NULL DEFAULT 0,
     email VARCHAR(255) UNIQUE NOT NULL,
-    auth_token TEXT,
+    auth_token TEXT UNIQUE NOT NULL,
     date_issued TIMESTAMP NOT NULL,
     date_expr TIMESTAMP NOT NULL
 );
@@ -53,9 +52,6 @@ func pgx_examples() {
 		Points:          rand.IntN(1000),
 		PermissionLevel: 0,
 		Email:           "john.doe@example.com",
-		AuthToken:       strconv.Itoa(rand.IntN(1000000)),
-		DateIssued:      time.Now(),
-		DateExpr:        time.Now().AddDate(0, 1, 0),
 	}
 
 	Create_User(user)
@@ -68,28 +64,31 @@ func pgx_examples() {
 		Points:          100,
 		PermissionLevel: 1,
 		Email:           "jane.doe@example.com",
-		AuthToken:       "abc123",
-		DateIssued:      time.Now(),
-		DateExpr:        time.Now().AddDate(0, 1, 0),
 	}
 
 	Update_User(username, user)
 
-	Retrieve_User("none")
+	Retrieve_User_Username("Username")
+
+	Retrieve_User_Auth_Token("Token")
+
+	Randomize_Auth_Token_Username("Username")
+
+	Randomize_Auth_Token_Auth_Token("Token")
 }
 
-//Function for setting up connection============================================================
+//Function for setting up connection ==============================================================
 
 func establish_connection() (conn *pgxpool.Pool, err error) {
 	// Set up connection to the PostgreSQL server
 	conn, err = pgxpool.New(context.Background(), databaseUrl)
 	if err != nil {
-		log.Fatalf("Unable to connect to database: %v\n", err)
+		log.Fatalf("INTERNAL: Unable to connect to database: %v\n", err)
 	}
 	return
 }
 
-//Function for creating tables==================================================================
+//Function for creating tables ====================================================================
 
 func Create_Tables() {
 	conn, err := establish_connection()
@@ -102,16 +101,18 @@ func Create_Tables() {
 	}
 }
 
-//Function for adding user data including auth token============================================
+//Function for adding user data including auth token===============================================
 
 func Create_User(user User) {
 	conn, err := establish_connection()
 	defer conn.Close()
 
-	compare_user := retrieve_user(conn, err, user.Username)
+	compare_user := retrieve_user_username(conn, err, user.Username)
 	if compare_user.Username == user.Username {
 		fmt.Printf("Username: %s already in use\n", user.Username)
 		return
+	} else {
+		fmt.Printf("Creating user\n", user.Username)
 	}
 
 	// Prepare the SQL statement
@@ -123,27 +124,29 @@ func Create_User(user User) {
 	// Execute the SQL statement using a prepared statement
 	var userID int
 	err = conn.QueryRow(context.Background(), insertSQL,
-		user.Name, user.Username, user.Password, user.Points, user.PermissionLevel, user.Email, user.AuthToken, user.DateIssued, user.DateExpr).Scan(&userID)
+		user.Name, user.Username, user.Password, user.Points, user.PermissionLevel, user.Email, GenerateRandomStringURLSafe(32), time.Now(), time.Now().AddDate(0, 1, 0)).Scan(&userID)
 	if err != nil {
 		log.Fatalf("Failed to insert data: %v\n", err)
 	}
 
+	Randomize_Auth_Token_Username(user.Username)
+
 	fmt.Printf("User inserted with ID: %d\n", userID)
 }
 
-//Function for editing user data================================================================
+//Function for editing user data ==================================================================
 
 func Update_User(username string, user User) {
 	conn, err := establish_connection()
 	defer conn.Close()
 
 	// This checks to see if username is connected to a real user
-	if retrieve_user(conn, err, username).Username != username {
+	if retrieve_user_username(conn, err, username).Username != username {
 		fmt.Printf("User: %s does not exist\n", username)
 		return
 	}
 	//This checks to make sure the desired info is not already in use
-	compare_user := retrieve_user(conn, err, user.Username)
+	compare_user := retrieve_user_username(conn, err, user.Username)
 	if compare_user.Username == user.Username {
 		fmt.Printf("Username: %s already in use\n", user.Username)
 		return
@@ -156,22 +159,22 @@ func Update_User(username string, user User) {
 
 	// Prepare the SQL statement for updating the user's name
 	updateNameSQL := `
-	UPDATE users SET name = $1, username = $2, password = $3, points = $4, permission_level = $5, email = $6, auth_token = $7, date_issued = $8, date_expr = $9
-	WHERE username = $10;
+	UPDATE users SET name = $1, username = $2, password = $3, points = $4, permission_level = $5, email = $6
+	WHERE username = $7;
     `
 
 	// Execute the SQL statement using a prepared statement
-	_, err = conn.Exec(context.Background(), updateNameSQL, user.Name, user.Username, user.Password, user.Points, user.PermissionLevel, user.Email, user.AuthToken, user.DateIssued, user.DateExpr, username)
+	_, err = conn.Exec(context.Background(), updateNameSQL, user.Name, user.Username, user.Password, user.Points, user.PermissionLevel, user.Email, username)
 	if err != nil {
-		log.Fatalf("Failed to update user's name: %v\n", err)
+		log.Fatalf("Failed to update user's info: %v\n", err)
 	}
 
-	fmt.Printf("User: %s, New Name: %s New Username: %s\n", username, user.Name, user.Username)
+	//fmt.Printf("User: %s, New Name: %s New Username: %s\n", username, user.Name, user.Username)
 }
 
-//Function for retrieving user data=============================================================
+//Functions for retrieving user data ==============================================================
 
-func Retrieve_User(username string) (user User) {
+func Retrieve_User_Username(username string) (user User) {
 	conn, err := establish_connection()
 	defer conn.Close()
 
@@ -196,17 +199,50 @@ func Retrieve_User(username string) (user User) {
 		&user.DateExpr,
 	)
 	if err != nil {
-		log.Printf("Failed to retrieve user data: %v\n", err)
+		log.Printf("Failed to retrieve user data from username: %v\n", err)
 	}
 
-	fmt.Printf("User Data: %+v\n", user)
+	//fmt.Printf("User Data: %+v\n", user)
+
+	return
+}
+
+func Retrieve_User_Auth_Token(auth_token string) (user User) {
+	conn, err := establish_connection()
+	defer conn.Close()
+
+	// Prepare the SQL statement for selecting the user's data
+	// the id column is just here for completeness and should not be referenced in actual deployment
+	selectUserSQL := `
+    SELECT id, name, username, password, points, permission_level, email, auth_token, date_issued, date_expr
+    FROM users
+    WHERE auth_token = $1;
+    `
+	var current_userID int
+	err = conn.QueryRow(context.Background(), selectUserSQL, auth_token).Scan(
+		&current_userID, //the id variable is here for completeness and should not be referenced in actual deployment
+		&user.Name,
+		&user.Username,
+		&user.Password,
+		&user.Points,
+		&user.PermissionLevel,
+		&user.Email,
+		&user.AuthToken,
+		&user.DateIssued,
+		&user.DateExpr,
+	)
+	if err != nil {
+		log.Printf("Failed to retrieve user data from auth_token: %v\n", err)
+	}
+
+	//fmt.Printf("User Data: %+v\n", user)
 
 	return
 }
 
 //private version of the Rerieve_user function that uses conn and err so a new connection does not have to be made
 
-func retrieve_user(conn *pgxpool.Pool, err error, username string) (user User) {
+func retrieve_user_username(conn *pgxpool.Pool, err error, username string) (user User) {
 	// Prepare the SQL statement for selecting the user's data
 	// the id column is just here for completeness and should not be referenced in actual deployment
 	selectUserSQL := `
@@ -228,10 +264,44 @@ func retrieve_user(conn *pgxpool.Pool, err error, username string) (user User) {
 		&user.DateExpr,
 	)
 	if err != nil {
-		log.Printf("Failed to retrieve user data: %v\n", err)
+		log.Printf("No users with that name exist: %v\n", err)
 	}
 
-	fmt.Printf("User Data: %+v\n", user)
+	//fmt.Printf("User Data: %+v\n", user)
 
 	return
+}
+
+//Functions for randomizing auth token ============================================================
+
+func Randomize_Auth_Token_Username(username string) {
+	conn, err := establish_connection()
+	defer conn.Close()
+
+	updateNameSQL := `
+	UPDATE users SET auth_token = $1, date_issued = $2, date_expr = $3
+	WHERE auth_token = $4;
+    `
+
+	// Execute the SQL statement using a prepared statement
+	_, err = conn.Exec(context.Background(), updateNameSQL, GenerateRandomStringURLSafe(32), time.Now(), time.Now().AddDate(0, 1, 0), username)
+	if err != nil {
+		log.Fatalf("Failed to randomize user's auth_token: %v\n", err)
+	}
+}
+
+func Randomize_Auth_Token_Auth_Token(auth_token string) {
+	conn, err := establish_connection()
+	defer conn.Close()
+
+	updateNameSQL := `
+	UPDATE users SET auth_token = $1, date_issued = $2, date_expr = $3
+	WHERE auth_token = $4;
+    `
+
+	// Execute the SQL statement using a prepared statement
+	_, err = conn.Exec(context.Background(), updateNameSQL, GenerateRandomStringURLSafe(32), time.Now(), time.Now().AddDate(0, 1, 0), auth_token)
+	if err != nil {
+		log.Fatalf("Failed to randomize user's auth_token: %v\n", err)
+	}
 }

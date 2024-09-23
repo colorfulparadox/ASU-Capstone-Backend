@@ -1,0 +1,43 @@
+this is a file with the test users that I can copy and paste from cause I got tired of typing them in every time I needed to reset the database
+
+		Name:            "John Doe",
+		Username:        "johndoe",
+		Password:        "securepassword",
+		Points:          rand.IntN(1000),
+		PermissionLevel: 1,
+		Email:           "john.doe@example.com",
+
+        Name:            "Jane Doe",
+		Username:        "janedoe",
+		Password:        "securepassword",
+		Points:          rand.IntN(1000),
+		PermissionLevel: 1,
+		Email:           "jane.doe@example.com",
+
+        Name:            "Grace",
+		Username:        "grace67",
+		Password:        "password9315",
+		Points:          rand.IntN(1000),
+		PermissionLevel: 0,
+		Email:           "grace67@example.com",
+
+        Name:            "Alice",
+		Username:        "alice31",
+		Password:        "password6440",
+		Points:          rand.IntN(1000),
+		PermissionLevel: 1,
+		Email:           "alice31@example.com",
+
+        Name:            "Charlie",
+		Username:        "charlie78",
+		Password:        "password4136",
+		Points:          rand.IntN(1000),
+		PermissionLevel: 0,
+		Email:           "charlie78@example.com",
+
+        Name:            "Jack",
+		Username:        "jack68",
+		Password:        "password3510",
+		Points:          rand.IntN(1000),
+		PermissionLevel: 0,
+		Email:           "jack68@example.com",

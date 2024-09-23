@@ -37,6 +37,8 @@ func Login(gc *gin.Context, pool *pgxpool.Pool) {
 		gc.JSON(http.StatusForbidden, "{}")
 	}
 
+	gc.JSON(http.StatusOK, auth_token)
+
 	// var username string = ""
 	// var password string
 
@@ -69,5 +71,5 @@ func Login(gc *gin.Context, pool *pgxpool.Pool) {
 	// 	Expires:    expires,
 	// }
 
-	gc.JSON(http.StatusOK, auth_token)
+	//gc.JSON(http.StatusOK, auth_token)
 }

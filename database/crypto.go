@@ -4,7 +4,11 @@ import (
 	"crypto/rand"
 	"encoding/base64"
 	"fmt"
+	"math/big"
+	"strconv"
+	"time"
 
+	"github.com/google/uuid"
 	"golang.org/x/crypto/bcrypt"
 )
 
@@ -41,6 +45,24 @@ func GenerateRandomStringURLSafe(n int) string {
 		panic(err)
 	}
 	return token
+}
+
+func Randomize_auth_token(auth_token string) {
+	randomize_auth_token(auth_token)
+}
+
+func GenerateUUID() string {
+	dateIssued := time.Now().Unix()
+	expires := time.Now().AddDate(0, 0, 7).Unix()
+	num, err := rand.Int(rand.Reader, big.NewInt(int64(10000)))
+	if err != nil {
+		fmt.Println("Error generating random number:", err)
+		return ""
+	}
+
+	token := uuid.New().String() + "/" + strconv.FormatInt(expires+dateIssued^(num.Int64()), 16) + "/" + GenerateRandomStringURLSafe(16)
+	return token
+
 }
 
 // Hashes the users password for storage

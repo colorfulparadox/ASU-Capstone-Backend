@@ -5,10 +5,8 @@ import (
 	"fmt"
 	"log"
 	"math/rand/v2"
-	"strconv"
 	"time"
 
-	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5/pgxpool"
 )
 
@@ -299,16 +297,16 @@ func randomize_auth_token(auth_token string) {
 	updateNameSQL := `UPDATE users SET auth_token = $1, date_issued = $2, date_expr = $3
 	WHERE auth_token = $4;`
 
-	dateIssued := time.Now().Unix()
-	expires := time.Now().AddDate(0, 0, 7).Unix()
+	//dateIssued := time.Now().Unix()
+	//expires := time.Now().AddDate(0, 0, 7).Unix()
 
-	key := uuid.New().String() + "/" + strconv.FormatInt(expires+dateIssued^(rand.Int64()), 16) + "/" + GenerateRandomStringURLSafe(16)
+	token := GenerateUUID()
 
 	// Execute the SQL statement using a prepared statement
-	_, err = conn.Exec(context.Background(), updateNameSQL, key, dateIssued, expires, auth_token)
+	_, err = conn.Exec(context.Background(), updateNameSQL, token, time.Now(), time.Now().AddDate(0, 0, 7), auth_token)
 	if err != nil {
 		log.Fatalf("Failed to randomize user's auth_token: %v\n", err)
 	}
-
+	//time.Now(), time.Now().AddDate(0, 0, 7)
 	//log.Println("Randomizing auth_token")
 }

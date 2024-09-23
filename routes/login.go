@@ -15,29 +15,43 @@ type LoginRequest struct {
 	ClientKey string `json:clientKey`
 }
 
+// type LoginToken struct {
+// 	AuthID     string `json:"authID"`
+// 	DateIssued int64  `json:"dateIssued"`
+// 	Expires    int64  `json:"expires"`
+// }
+
+// Holds the auth_token
 type LoginToken struct {
-	AuthID     string `json:"authID"`
-	DateIssued int64  `json:"dateIssued"`
-	Expires    int64  `json:"expires"`
+	AuthID string `json:"authID"`
 }
 
 func Login(gc *gin.Context, pool *pgxpool.Pool) {
 	var loginReq LoginRequest
 
+	// Parses JSON received from client
 	err := gc.ShouldBindJSON(&loginReq)
 	if err != nil {
 		gc.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
 
+	// Gets the auth_token for the specifc user
 	auth_token := database.Verify_User_Login(loginReq.User, loginReq.Pass)
 
+	// Checks if user is valid
 	if auth_token == "" {
-		fmt.Println("invalid password")
+		fmt.Println("username or password incorrect")
 		gc.JSON(http.StatusForbidden, "{}")
 	}
 
-	gc.JSON(http.StatusOK, auth_token)
+	// Puts auth_token into JSON object
+	loginToken := LoginToken{
+		AuthID: auth_token,
+	}
+
+	// Returns loginToken
+	gc.JSON(http.StatusOK, loginToken)
 
 	// var username string = ""
 	// var password string
@@ -71,5 +85,5 @@ func Login(gc *gin.Context, pool *pgxpool.Pool) {
 	// 	Expires:    expires,
 	// }
 
-	//gc.JSON(http.StatusOK, auth_token)
+	//gc.JSON(http.StatusOK, loginToken)
 }

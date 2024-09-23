@@ -76,7 +76,7 @@ func New_User(current_username, auth_token, name, username, password string, per
 
 func Set_Permissions(auth_token string, username string, permission int) {
 	if Verify_Permissions(auth_token, edit_users) {
-		user := Get_User(retrieve_user_username(username).AuthToken)
+		user := retrieve_user_username(username)
 		user.PermissionLevel = permission
 		update_user(username, user)
 	}

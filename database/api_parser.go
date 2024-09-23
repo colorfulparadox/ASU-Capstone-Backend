@@ -11,6 +11,7 @@ import (
 // An enum for the security level of certain actions
 const (
 	create_users     = 1
+	get_users        = 1
 	edit_self        = 0
 	edit_users       = 1
 	edit_permissions = 1
@@ -49,7 +50,7 @@ func Verify_User_Auth_Token(auth_token string) bool {
 
 // Verifies the current user has the permissions to perform an action
 func Verify_Permissions(auth_token string, security_level int) bool {
-	user := Get_User(auth_token)
+	user := Get_Self(auth_token)
 	if user.PermissionLevel >= security_level {
 		log.Println("Correct Permissions")
 		return true
@@ -94,8 +95,8 @@ func New_User_From_Object(auth_token string, user User) bool {
 	return false
 }
 
-// Gets user data from an auth_token and verifies the
-func Get_User(auth_token string) User {
+// Verifies auth token then returns self if Verified
+func Get_Self(auth_token string) User {
 	var user User
 	if Verify_User_Auth_Token(auth_token) {
 		return retrieve_user_auth_token(auth_token)
@@ -104,11 +105,20 @@ func Get_User(auth_token string) User {
 	}
 }
 
+// Verifies auth token then returns user based on username if verified
+func Get_User(auth_token, username string) User {
+	var user User
+	if Verify_Permissions(auth_token, get_users) {
+		return retrieve_user_auth_token(auth_token)
+	}
+	return user
+}
+
 // takes the current user's auth token and the username and new name of the user to be changed
 func Set_Name(auth_token string, username string, new_name string) {
 	//Determines if user is editing themselves or someone else and sets permissions accordingly
 	var security_level int
-	if Get_User(auth_token).Username == username {
+	if Get_Self(auth_token).Username == username {
 		security_level = edit_self
 	} else {
 		security_level = edit_users
@@ -130,7 +140,7 @@ func Set_Name(auth_token string, username string, new_name string) {
 func Set_Username(auth_token string, username string, new_username string) {
 	//Determines if user is editing themselves or someone else and sets permissions accordingly
 	var security_level int
-	if Get_User(auth_token).Username == username {
+	if Get_Self(auth_token).Username == username {
 		security_level = edit_self
 	} else {
 		security_level = edit_users
@@ -152,7 +162,7 @@ func Set_Username(auth_token string, username string, new_username string) {
 func Set_Password(auth_token string, username string, new_password string) {
 	//Determines if user is editing themselves or someone else and sets permissions accordingly
 	var security_level int
-	if Get_User(auth_token).Username == username {
+	if Get_Self(auth_token).Username == username {
 		security_level = edit_self
 	} else {
 		security_level = edit_users
@@ -188,7 +198,7 @@ func Set_Permissions(auth_token string, username string, new_permission int) {
 func Set_Email(auth_token string, username string, new_email string) {
 	//Determines if user is editing themselves or someone else and sets permissions accordingly
 	var security_level int
-	if Get_User(auth_token).Username == username {
+	if Get_Self(auth_token).Username == username {
 		security_level = edit_self
 	} else {
 		security_level = edit_users

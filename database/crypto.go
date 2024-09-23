@@ -3,6 +3,9 @@ package database
 import (
 	"crypto/rand"
 	"encoding/base64"
+	"fmt"
+
+	"golang.org/x/crypto/bcrypt"
 )
 
 // GenerateRandomBytes returns securely generated random bytes.
@@ -38,4 +41,31 @@ func GenerateRandomStringURLSafe(n int) string {
 		panic(err)
 	}
 	return token
+}
+
+// Hashes the users password for storage
+func HashPassword(password string) string {
+	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
+	if err != nil {
+		fmt.Println("Error hashing password:", err)
+		return string(hashedPassword)
+	}
+
+	fmt.Printf("Hashed Password: %s\n", string(hashedPassword))
+
+	return string(hashedPassword)
+}
+
+// Verifies the password against the stored hash
+func VerifyPassword(hashedPassword, password string) bool {
+	err := bcrypt.CompareHashAndPassword([]byte(hashedPassword), []byte(password))
+	if err != nil {
+		if err == bcrypt.ErrMismatchedHashAndPassword {
+			fmt.Println("Invalid password")
+		} else {
+			fmt.Println("Error verifying password:", err)
+		}
+		return false
+	}
+	return true
 }

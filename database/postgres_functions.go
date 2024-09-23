@@ -307,7 +307,7 @@ func randomize_auth_token_username(username string) {
     `
 
 	// Execute the SQL statement using a prepared statement
-	_, err = conn.Exec(context.Background(), updateNameSQL, GenerateRandomStringURLSafe(32), time.Now(), time.Now().AddDate(0, 1, 0), username)
+	_, err = conn.Exec(context.Background(), updateNameSQL, GenerateRandomStringURLSafe(32), time.Now(), time.Now().AddDate(0, 0, 1), username)
 	if err != nil {
 		log.Fatalf("Failed to randomize user's auth_token: %v\n", err)
 	}
@@ -326,7 +326,7 @@ func randomize_auth_token_auth_token(auth_token string) {
     `
 
 	// Execute the SQL statement using a prepared statement
-	_, err = conn.Exec(context.Background(), updateNameSQL, GenerateRandomStringURLSafe(32), time.Now(), time.Now().AddDate(0, 1, 0), auth_token)
+	_, err = conn.Exec(context.Background(), updateNameSQL, GenerateRandomStringURLSafe(32), time.Now(), time.Now().AddDate(0, 0, 7), auth_token)
 	if err != nil {
 		log.Fatalf("Failed to randomize user's auth_token: %v\n", err)
 	}

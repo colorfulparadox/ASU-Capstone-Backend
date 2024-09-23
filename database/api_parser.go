@@ -42,7 +42,7 @@ func Verify_User_Auth_Token(auth_token string) bool {
 		if user.DateExpr.After(time.Now()) {
 			return true
 		}
-		randomize_auth_token_auth_token(auth_token)
+		randomize_auth_token(auth_token)
 	}
 
 	return false

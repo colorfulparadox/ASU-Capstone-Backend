@@ -73,9 +73,7 @@ func pgx_examples() {
 
 	retrieve_user_auth_token("Token")
 
-	randomize_auth_token_username("Username")
-
-	randomize_auth_token_auth_token("Token")
+	randomize_auth_token("Token")
 }
 
 //Function for setting up connection ==============================================================
@@ -130,21 +128,21 @@ func create_user(user User) {
 		fmt.Printf("Creating user\n")
 	}
 
+	user.AuthToken = GenerateRandomStringURLSafe(32)
+
 	// Prepare the SQL statement
-	insertSQL := `
-    INSERT INTO users (name, username, password, password_hash, points, permission_level, email, auth_token, date_issued, date_expr)
-    VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10) RETURNING id;
-    `
+	insertSQL := `INSERT INTO users (name, username, password, password_hash, points, permission_level, email, auth_token, date_issued, date_expr)
+    VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10) RETURNING id;`
 
 	// Execute the SQL statement using a prepared statement
 	var userID int
 	err = conn.QueryRow(context.Background(), insertSQL,
-		user.Name, user.Username, user.Password, HashPassword(user.Password), user.Points, user.PermissionLevel, user.Email, GenerateRandomStringURLSafe(32), time.Now(), time.Now().AddDate(0, 1, 0)).Scan(&userID)
+		user.Name, user.Username, user.Password, HashPassword(user.Password), user.Points, user.PermissionLevel, user.Email, user.AuthToken, time.Now(), time.Now().AddDate(0, 0, 0)).Scan(&userID)
 	if err != nil {
 		log.Fatalf("Failed to insert data: %v\n", err)
 	}
 
-	randomize_auth_token_username(user.Username)
+	randomize_auth_token(user.AuthToken)
 
 	fmt.Printf("User inserted with ID: %d\n", userID)
 }
@@ -174,10 +172,8 @@ func update_user(username string, user User) bool {
 	}
 
 	// Prepare the SQL statement for updating the user's name
-	updateNameSQL := `
-	UPDATE users SET name = $1, username = $2, password = $3, password_hash = $4, points = $5, permission_level = $6, email = $7
-	WHERE username = $8;
-    `
+	updateNameSQL := `UPDATE users SET name = $1, username = $2, password = $3, password_hash = $4, points = $5, permission_level = $6, email = $7
+	WHERE username = $8;`
 
 	// Execute the SQL statement using a prepared statement
 	_, err = conn.Exec(context.Background(), updateNameSQL, user.Name, user.Username, user.Password, HashPassword(user.Password), user.Points, user.PermissionLevel, user.Email, username)
@@ -200,11 +196,10 @@ func retrieve_user_username(username string) (user User) {
 
 	// Prepare the SQL statement for selecting the user's data
 	// the id column is just here for completeness and should not be referenced in actual deployment
-	selectUserSQL := `
-    SELECT id, name, username, password, password_hash, points, permission_level, email, auth_token, date_issued, date_expr
+	selectUserSQL := `SELECT id, name, username, password, password_hash, points, permission_level, email, auth_token, date_issued, date_expr
     FROM users
-    WHERE username = $1;
-    `
+    WHERE username = $1;`
+
 	var current_userID int
 	err = conn.QueryRow(context.Background(), selectUserSQL, username).Scan(
 		&current_userID, //the id variable is here for completeness and should not be referenced in actual deployment
@@ -235,11 +230,10 @@ func retrieve_user_auth_token(auth_token string) (user User) {
 
 	// Prepare the SQL statement for selecting the user's data
 	// the id column is just here for completeness and should not be referenced in actual deployment
-	selectUserSQL := `
-    SELECT id, name, username, password, points, permission_level, email, auth_token, date_issued, date_expr
+	selectUserSQL := `SELECT id, name, username, password, points, permission_level, email, auth_token, date_issued, date_expr
     FROM users
-    WHERE auth_token = $1;
-    `
+    WHERE auth_token = $1;`
+
 	var current_userID int
 	err = conn.QueryRow(context.Background(), selectUserSQL, auth_token).Scan(
 		&current_userID, //the id variable is here for completeness and should not be referenced in actual deployment
@@ -267,11 +261,10 @@ func retrieve_user_auth_token(auth_token string) (user User) {
 func retrieve_user_username_pass_conn(conn *pgxpool.Pool, username string) (user User) {
 	// Prepare the SQL statement for selecting the user's data
 	// the id column is just here for completeness and should not be referenced in actual deployment
-	selectUserSQL := `
-    SELECT id, name, username, password, points, permission_level, email, auth_token, date_issued, date_expr
+	selectUserSQL := `SELECT id, name, username, password, points, permission_level, email, auth_token, date_issued, date_expr
     FROM users
-    WHERE username = $1;
-    `
+    WHERE username = $1;`
+
 	var current_userID int
 	err := conn.QueryRow(context.Background(), selectUserSQL, username).Scan(
 		&current_userID, //the id variable is here for completeness and should not be referenced in actual deployment
@@ -294,36 +287,15 @@ func retrieve_user_username_pass_conn(conn *pgxpool.Pool, username string) (user
 	return
 }
 
-//Functions for randomizing auth token ============================================================
+//Function for randomizing auth token ============================================================
 
-func randomize_auth_token_username(username string) {
+func randomize_auth_token(auth_token string) {
 	conn := establish_connection()
 	var err error
 	defer conn.Close()
 
-	updateNameSQL := `
-	UPDATE users SET auth_token = $1, date_issued = $2, date_expr = $3
-	WHERE auth_token = $4;
-    `
-
-	// Execute the SQL statement using a prepared statement
-	_, err = conn.Exec(context.Background(), updateNameSQL, GenerateRandomStringURLSafe(32), time.Now(), time.Now().AddDate(0, 0, 1), username)
-	if err != nil {
-		log.Fatalf("Failed to randomize user's auth_token: %v\n", err)
-	}
-
-	log.Println("Randomizing auth_token")
-}
-
-func randomize_auth_token_auth_token(auth_token string) {
-	conn := establish_connection()
-	var err error
-	defer conn.Close()
-
-	updateNameSQL := `
-	UPDATE users SET auth_token = $1, date_issued = $2, date_expr = $3
-	WHERE auth_token = $4;
-    `
+	updateNameSQL := `UPDATE users SET auth_token = $1, date_issued = $2, date_expr = $3
+	WHERE auth_token = $4;`
 
 	// Execute the SQL statement using a prepared statement
 	_, err = conn.Exec(context.Background(), updateNameSQL, GenerateRandomStringURLSafe(32), time.Now(), time.Now().AddDate(0, 0, 7), auth_token)
@@ -331,5 +303,5 @@ func randomize_auth_token_auth_token(auth_token string) {
 		log.Fatalf("Failed to randomize user's auth_token: %v\n", err)
 	}
 
-	log.Println("Randomizing auth_token")
+	//log.Println("Randomizing auth_token")
 }

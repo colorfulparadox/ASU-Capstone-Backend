@@ -128,7 +128,7 @@ func create_user(user User) {
 		fmt.Printf("Creating user\n")
 	}
 
-	user.AuthToken = GenerateRandomStringURLSafe(32)
+	user.AuthToken = GenerateUUID()
 
 	// Prepare the SQL statement
 	insertSQL := `INSERT INTO users (name, username, password, password_hash, points, permission_level, email, auth_token, date_issued, date_expr)

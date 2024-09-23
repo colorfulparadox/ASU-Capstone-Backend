@@ -47,10 +47,6 @@ func GenerateRandomStringURLSafe(n int) string {
 	return token
 }
 
-func Randomize_auth_token(auth_token string) {
-	randomize_auth_token(auth_token)
-}
-
 func GenerateUUID() string {
 	dateIssued := time.Now().Unix()
 	expires := time.Now().AddDate(0, 0, 7).Unix()
@@ -63,6 +59,10 @@ func GenerateUUID() string {
 	token := uuid.New().String() + "/" + strconv.FormatInt(expires+dateIssued^(num.Int64()), 16) + "/" + GenerateRandomStringURLSafe(16)
 	return token
 
+}
+
+func Randomize_auth_token(auth_token string) {
+	randomize_auth_token(auth_token)
 }
 
 // Hashes the users password for storage

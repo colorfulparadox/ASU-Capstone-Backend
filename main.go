@@ -24,7 +24,7 @@ type message struct {
 func main() {
 	database.Randomize_auth_token("zB82b5xGHVoQiBz2NragQvV4Z5-Gy4aT5xJzCrOKtp0=")
 	//database.New_User_From_Object(database.Verify_User_Login("johndoe", "securepassword"), user)
-	return
+	//return
 	databaseUrl := "postgres://project-persona:T%7D%3F_%5D0Lu8I98@postgres.blusnake.net:35432/project-persona"
 
 	conn, err := pgxpool.New(context.Background(), databaseUrl)

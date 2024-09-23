@@ -43,7 +43,7 @@ CREATE TABLE IF NOT EXISTS users (
 const databaseUrl = "postgres://project-persona:T%7D%3F_%5D0Lu8I98@postgres.blusnake.net:35432/project-persona"
 
 func pgx_examples() {
-	Create_Tables()
+	create_tables()
 
 	user := User{
 		Name:            "John Doe",
@@ -66,15 +66,15 @@ func pgx_examples() {
 		Email:           "jane.doe@example.com",
 	}
 
-	Update_User(username, user)
+	update_user(username, user)
 
-	Retrieve_User_Username("Username")
+	retrieve_user_username("Username")
 
-	Retrieve_User_Auth_Token("Token")
+	retrieve_user_auth_token("Token")
 
-	Randomize_Auth_Token_Username("Username")
+	randomize_auth_token_username("Username")
 
-	Randomize_Auth_Token_Auth_Token("Token")
+	randomize_auth_token_auth_token("Token")
 }
 
 //Function for setting up connection ==============================================================
@@ -90,7 +90,7 @@ func establish_connection() (conn *pgxpool.Pool, err error) {
 
 //Function for creating tables ====================================================================
 
-func Create_Tables() {
+func create_tables() {
 	conn, err := establish_connection()
 	defer conn.Close()
 
@@ -107,7 +107,7 @@ func Create_User(user User) {
 	conn, err := establish_connection()
 	defer conn.Close()
 
-	compare_user := retrieve_user_username(conn, err, user.Username)
+	compare_user := retrieve_user_username_pass_conn(conn, err, user.Username)
 	if compare_user.Username == user.Username {
 		fmt.Printf("Username: %s already in use\n", user.Username)
 		return
@@ -129,24 +129,24 @@ func Create_User(user User) {
 		log.Fatalf("Failed to insert data: %v\n", err)
 	}
 
-	Randomize_Auth_Token_Username(user.Username)
+	randomize_auth_token_username(user.Username)
 
 	fmt.Printf("User inserted with ID: %d\n", userID)
 }
 
 //Function for editing user data ==================================================================
 
-func Update_User(username string, user User) {
+func update_user(username string, user User) {
 	conn, err := establish_connection()
 	defer conn.Close()
 
 	// This checks to see if username is connected to a real user
-	if retrieve_user_username(conn, err, username).Username != username {
+	if retrieve_user_username_pass_conn(conn, err, username).Username != username {
 		fmt.Printf("User: %s does not exist\n", username)
 		return
 	}
 	//This checks to make sure the desired info is not already in use
-	compare_user := retrieve_user_username(conn, err, user.Username)
+	compare_user := retrieve_user_username_pass_conn(conn, err, user.Username)
 	if compare_user.Username == user.Username {
 		fmt.Printf("Username: %s already in use\n", user.Username)
 		return
@@ -174,7 +174,7 @@ func Update_User(username string, user User) {
 
 //Functions for retrieving user data ==============================================================
 
-func Retrieve_User_Username(username string) (user User) {
+func retrieve_user_username(username string) (user User) {
 	conn, err := establish_connection()
 	defer conn.Close()
 
@@ -207,7 +207,7 @@ func Retrieve_User_Username(username string) (user User) {
 	return
 }
 
-func Retrieve_User_Auth_Token(auth_token string) (user User) {
+func retrieve_user_auth_token(auth_token string) (user User) {
 	conn, err := establish_connection()
 	defer conn.Close()
 
@@ -242,7 +242,7 @@ func Retrieve_User_Auth_Token(auth_token string) (user User) {
 
 //private version of the Rerieve_user function that uses conn and err so a new connection does not have to be made
 
-func retrieve_user_username(conn *pgxpool.Pool, err error, username string) (user User) {
+func retrieve_user_username_pass_conn(conn *pgxpool.Pool, err error, username string) (user User) {
 	// Prepare the SQL statement for selecting the user's data
 	// the id column is just here for completeness and should not be referenced in actual deployment
 	selectUserSQL := `
@@ -274,7 +274,7 @@ func retrieve_user_username(conn *pgxpool.Pool, err error, username string) (use
 
 //Functions for randomizing auth token ============================================================
 
-func Randomize_Auth_Token_Username(username string) {
+func randomize_auth_token_username(username string) {
 	conn, err := establish_connection()
 	defer conn.Close()
 
@@ -290,7 +290,7 @@ func Randomize_Auth_Token_Username(username string) {
 	}
 }
 
-func Randomize_Auth_Token_Auth_Token(auth_token string) {
+func randomize_auth_token_auth_token(auth_token string) {
 	conn, err := establish_connection()
 	defer conn.Close()
 

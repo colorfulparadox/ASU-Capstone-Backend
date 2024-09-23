@@ -17,8 +17,8 @@ const (
 )
 
 func Verify_User_Login(username string, password string) string {
-	user := Retrieve_User_Username(username)
-	if Retrieve_User_Username(username).Password == password {
+	user := retrieve_user_username(username)
+	if user.Password == password {
 		return user.AuthToken
 	} else {
 		return ""
@@ -27,13 +27,13 @@ func Verify_User_Login(username string, password string) string {
 
 // Won't work until I rebuild the array cause rn auth keys arent' unique but verifies it's a real auth key and checks that it's not expired
 func Verify_User_Auth_Token(auth_token string) bool {
-	user := Retrieve_User_Auth_Token(auth_token)
+	user := retrieve_user_auth_token(auth_token)
 	if user.AuthToken == auth_token {
 		if user.DateExpr.Before(time.Now()) {
 			return true
 		}
 
-		Randomize_Auth_Token_Auth_Token(auth_token)
+		randomize_auth_token_auth_token(auth_token)
 	}
 
 	return false
@@ -52,7 +52,7 @@ func Verify_Permissions(auth_token string, security_level int) bool {
 func Get_User(auth_token string) User {
 	var user User
 	if Verify_User_Auth_Token(auth_token) {
-		return Retrieve_User_Auth_Token(auth_token)
+		return retrieve_user_auth_token(auth_token)
 	} else {
 		return user
 	}
@@ -80,8 +80,8 @@ func New_User(current_username, auth_token, name, username, password string, per
 
 func Set_Permissions(auth_token string, username string, permission int) {
 	if Verify_Permissions(auth_token, edit_users) {
-		user := Get_User(Retrieve_User_Username(username).AuthToken)
+		user := Get_User(retrieve_user_username(username).AuthToken)
 		user.PermissionLevel = permission
-		Update_User(username, user)
+		update_user(username, user)
 	}
 }

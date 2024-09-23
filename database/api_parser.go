@@ -41,11 +41,7 @@ func Verify_User_Auth_Token(auth_token string) bool {
 
 func Verify_Permissions(auth_token string, security_level int) bool {
 	user := Get_User(auth_token)
-	if user.PermissionLevel >= security_level {
-		return true
-	}
-
-	return false
+	return user.PermissionLevel >= security_level
 }
 
 // Gets user data from an auth_token and verifies the
@@ -70,7 +66,7 @@ func New_User(current_username, auth_token, name, username, password string, per
 			Email:           email,
 		}
 
-		Create_User(user)
+		create_user(user)
 
 		return true
 	}

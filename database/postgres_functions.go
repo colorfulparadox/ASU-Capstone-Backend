@@ -54,7 +54,7 @@ func pgx_examples() {
 		Email:           "john.doe@example.com",
 	}
 
-	Create_User(user)
+	create_user(user)
 
 	username := "johndoe"
 	user = User{
@@ -103,7 +103,7 @@ func create_tables() {
 
 //Function for adding user data including auth token===============================================
 
-func Create_User(user User) {
+func create_user(user User) {
 	conn, err := establish_connection()
 	defer conn.Close()
 
@@ -112,7 +112,7 @@ func Create_User(user User) {
 		fmt.Printf("Username: %s already in use\n", user.Username)
 		return
 	} else {
-		fmt.Printf("Creating user\n", user.Username)
+		fmt.Printf("Creating user\n")
 	}
 
 	// Prepare the SQL statement

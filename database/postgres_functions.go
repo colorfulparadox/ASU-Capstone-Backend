@@ -175,10 +175,13 @@ func update_user(username string, user User) bool {
 	//This checks to make sure the desired info is not already in use
 	username_user, email_user = retrieve_user_pass_conn(conn, user.Username, user.Email)
 	if username_user.UserID != user.UserID {
+		log.Println(username_user.UserID, user.UserID)
 		if username_user.Username == user.Username {
 			log.Printf("Username: %s already in use\n", user.Username)
 			return false
 		}
+	}
+	if email_user.UserID != user.UserID {
 		if email_user.Email == user.Email {
 			log.Printf("Email: %s already in use\n", user.Email)
 			return false
@@ -335,9 +338,9 @@ func retrieve_user_pass_conn(conn *pgxpool.Pool, username, email string) (userna
 
 		selectUserSQL = `SELECT id, name, username, password, points, permission_level, email, auth_token, date_issued, date_expr
     		FROM users
-    		WHERE username = $1;`
+    		WHERE email = $1;`
 
-		err = conn.QueryRow(context.Background(), selectUserSQL, username).Scan(
+		err = conn.QueryRow(context.Background(), selectUserSQL, email).Scan(
 			&email_user.UserID, //the id variable should not be used outside the backend
 			&email_user.Name,
 			&email_user.Username,
@@ -353,6 +356,7 @@ func retrieve_user_pass_conn(conn *pgxpool.Pool, username, email string) (userna
 			log.Printf("No users with that email exist: %v\n", err)
 		}
 	}
+	log.Println(username_user.UserID, email_user.UserID)
 	return
 }
 

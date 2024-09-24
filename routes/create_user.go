@@ -36,11 +36,11 @@ func Create_User(gc *gin.Context, pool *pgxpool.Pool) {
 	user_creation_success := database.New_User(userData.AdminAuthID, userData.Name, userData.Username, userData.Password, userData.PermissionLevel, userData.Email)
 
 	// Checks if user is valid
-	if user_creation_success > 0 {
-		if user_creation_success == 1 {
-			log.Println("User already exists")
-		}
 
+	switch user_creation_success {
+	case 1:
+		log.Println("User already exists")
+	case 2:
 		log.Println("Invalid Permissions")
 	}
 

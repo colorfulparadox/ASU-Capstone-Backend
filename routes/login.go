@@ -10,9 +10,8 @@ import (
 )
 
 type LoginRequest struct {
-	User      string `json:"user"`
-	Pass      string `json:"pass"`
-	ClientKey string `json:clientKey`
+	User string `json:"user"`
+	Pass string `json:"pass"`
 }
 
 // type LoginToken struct {

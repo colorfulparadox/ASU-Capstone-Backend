@@ -282,3 +282,27 @@ func Randomize_Auth_Token(auth_token, username string) int {
 
 	return Incorrect_Permissions
 }
+
+func Delete_User(auth_token, username string) int {
+	//Determines if user is editing themselves or someone else and sets permissions accordingly
+	var security_level int
+	user := Verify_User_Auth_Token(auth_token)
+	if user.Username == username || username == "" {
+		security_level = edit_self
+	} else {
+		security_level = edit_users
+	}
+
+	//Applies change to user
+	if Verify_Permissions(auth_token, security_level) {
+		if security_level != 0 {
+			user = retrieve_user_username(username)
+		}
+
+		delete_user(user.Username)
+		log.Println("User Deleted")
+		return Success
+	}
+
+	return Incorrect_Permissions
+}

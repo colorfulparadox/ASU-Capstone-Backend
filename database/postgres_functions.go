@@ -182,28 +182,57 @@ func update_user(username string, user User) bool {
 
 	if user.Password == "" {
 		// Prepare the SQL statement for updating the user's name
-		updateNameSQL := `UPDATE users SET name = $1, username = $2, points = $3, permission_level = $4, email = $5
+		updateUserSQL := `UPDATE users SET name = $1, username = $2, points = $3, permission_level = $4, email = $5
 			WHERE username = $6;`
 
 		// Execute the SQL statement using a prepared statement
-		_, err = conn.Exec(context.Background(), updateNameSQL, user.Name, user.Username, user.Points, user.PermissionLevel, user.Email, username)
+		_, err = conn.Exec(context.Background(), updateUserSQL, user.Name, user.Username, user.Points, user.PermissionLevel, user.Email, username)
 		if err != nil {
 			log.Fatalf("Failed to update user's info: %v\n", err)
 			return false
 		}
 	} else {
 		// Prepare the SQL statement for updating the user's name
-		updateNameSQL := `UPDATE users SET name = $1, username = $2, password = $3, password_hash = $4, points = $5, permission_level = $6, email = $7
+		updateUserSQL := `UPDATE users SET name = $1, username = $2, password = $3, password_hash = $4, points = $5, permission_level = $6, email = $7
 			WHERE username = $8;`
 
 		// Execute the SQL statement using a prepared statement
-		_, err = conn.Exec(context.Background(), updateNameSQL, user.Name, user.Username, user.Password, HashPassword(user.Password), user.Points, user.PermissionLevel, user.Email, username)
+		_, err = conn.Exec(context.Background(), updateUserSQL, user.Name, user.Username, user.Password, HashPassword(user.Password), user.Points, user.PermissionLevel, user.Email, username)
 		if err != nil {
 			log.Fatalf("Failed to update user's info: %v\n", err)
 			return false
 		}
 	}
 	log.Println("Update Complete")
+	return true
+}
+
+//Function for deleting a user ====================================================================
+
+// takes user object returns if user was created or not
+func delete_user(username string) bool {
+	conn := establish_connection()
+	var err error
+	defer conn.Close()
+	defer log.Println("Conn Closed")
+
+	user := retrieve_user_username_pass_conn(conn, username)
+	if user.Username == "" {
+		log.Printf("User: %s does not exist", username)
+		return false
+	}
+
+	// Prepare the SQL statement
+	deleteUserSQL := `DELETE FROM users 
+	WHERE username = $1;`
+
+	// Execute the SQL statement using a prepared statement
+	_, err = conn.Exec(context.Background(), deleteUserSQL, username)
+	if err != nil {
+		log.Fatalf("Failed to delete user: %v\n", err)
+	}
+
+	log.Printf("Deleting User: %s\n", username)
 	return true
 }
 

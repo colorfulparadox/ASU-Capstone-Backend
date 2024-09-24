@@ -72,6 +72,12 @@ func main() {
 		Sender:    routes.Reset_Auth_Token,
 	})
 
+	router.AddRoute(&r, router.Receiver{
+		Route:     "/delete_user",
+		RouteType: router.RoutePost,
+		Sender:    routes.Delete_User,
+	})
+
 	/*
 		add_route(&router, Receiver{
 			route:      "/login",

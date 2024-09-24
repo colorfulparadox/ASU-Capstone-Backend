@@ -113,7 +113,8 @@ func create_users_table() {
 
 //Function for adding user data including auth token===============================================
 
-func create_user(user User) {
+// takes user object returns if user was created or not
+func create_user(user User) bool {
 	conn := establish_connection()
 	var err error
 	defer conn.Close()
@@ -121,7 +122,7 @@ func create_user(user User) {
 	compare_user := retrieve_user_username_pass_conn(conn, user.Username)
 	if compare_user.Username == user.Username {
 		log.Printf("Username: %s already in use\n", user.Username)
-		return
+		return false
 	} else {
 		log.Printf("Creating user\n")
 	}
@@ -143,6 +144,8 @@ func create_user(user User) {
 	randomize_auth_token(user.AuthToken)
 
 	log.Printf("User inserted with ID: %d\n", userID)
+
+	return true
 }
 
 //Function for editing user data ==================================================================

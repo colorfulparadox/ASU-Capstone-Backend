@@ -54,6 +54,12 @@ func main() {
 		Sender:    routes.Login,
 	})
 
+	router.AddRoute(&r, router.Receiver{
+		Route:     "/create_user",
+		RouteType: router.RoutePost,
+		Sender:    routes.Create_User,
+	})
+
 	/*
 		add_route(&router, Receiver{
 			route:      "/login",

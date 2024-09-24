@@ -19,6 +19,13 @@ const (
 	delete_users     = 1
 )
 
+// An enum to show if a user was created or if not what error was thrown
+const (
+	User_Created = iota
+	User_Already_Exists
+	Incorrect_Permissions
+)
+
 func Create_Tables() {
 	create_users_table()
 }
@@ -61,7 +68,7 @@ func Verify_Permissions(auth_token string, security_level int) bool {
 }
 
 // Adds a user to the database
-func New_User(auth_token, name, username, password string, permission_level int, email string) bool {
+func New_User(auth_token, name, username, password string, permission_level int, email string) int {
 
 	if Verify_Permissions(auth_token, create_users) {
 		user := User{
@@ -73,15 +80,18 @@ func New_User(auth_token, name, username, password string, permission_level int,
 			Email:           email,
 		}
 
-		create_user(user)
+		if create_user(user) {
+			return User_Created
+		}
 
-		return true
+		return User_Already_Exists
 	}
 
-	return false
+	return Incorrect_Permissions
 }
 
 // Adds a user to the database from a user object
+// This is used for testing and is not meant to be used in production
 func New_User_From_Object(auth_token string, user User) bool {
 
 	log.Printf("User permissions: %d\n", retrieve_user_auth_token(auth_token).PermissionLevel)

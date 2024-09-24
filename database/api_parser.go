@@ -21,8 +21,8 @@ const (
 
 // An enum to show if a user was created or if not what error was thrown
 const (
-	User_Created = iota
-	User_Already_Exists
+	Success = iota
+	Data_Already_Exists
 	Incorrect_Permissions
 )
 
@@ -34,6 +34,7 @@ func Create_Tables() {
 func Verify_User_Login(username string, password string) string {
 	user := retrieve_user_username(username)
 	if VerifyPassword(user.PasswordHash, password) {
+		log.Printf("Verified Login by: %s\n", username)
 		return user.AuthToken
 	} else {
 		log.Println("Incorrect cridentials")
@@ -41,28 +42,33 @@ func Verify_User_Login(username string, password string) string {
 	}
 }
 
-// Verifies a login attempt with the auth_token
-func Verify_User_Auth_Token(auth_token string) bool {
+// Verifies an authentication attempt with the auth_token
+// If successful returns the specified user object
+// If unsuccessful returns an empty user object
+func Verify_User_Auth_Token(auth_token string) User {
 	user := retrieve_user_auth_token(auth_token)
 	if user.AuthToken == auth_token {
 		if user.DateExpr.After(time.Now().UTC()) {
-			return true
+			log.Printf("Verified Authentication of: %s\n", user.Username)
+			log.Printf("Passing Current User to Function\n")
+			return user
 		}
 		randomize_auth_token(auth_token)
 		log.Println("Auth Token reset")
 	}
-
-	return false
+	log.Println("Invalid Auth Token")
+	var empty_user User
+	return empty_user
 }
 
 // Verifies the current user has the permissions to perform an action
 func Verify_Permissions(auth_token string, security_level int) bool {
-	user := Get_Self(auth_token)
+	user := Verify_User_Auth_Token(auth_token)
 	if user.PermissionLevel >= security_level {
 		log.Println("Correct Permissions")
 		return true
 	} else {
-		log.Println("Invalid Permissions")
+		log.Printf("User: %s is not allowed to perform that action\n", user.Username)
 		return false
 	}
 }
@@ -81,12 +87,10 @@ func New_User(auth_token, name, username, password string, permission_level int,
 		}
 
 		if create_user(user) {
-			return User_Created
+			return Success
 		}
-
-		return User_Already_Exists
+		return Data_Already_Exists
 	}
-
 	return Incorrect_Permissions
 }
 
@@ -94,7 +98,7 @@ func New_User(auth_token, name, username, password string, permission_level int,
 // This is used for testing and is not meant to be used in production
 func New_User_From_Object(auth_token string, user User) bool {
 
-	log.Printf("User permissions: %d\n", retrieve_user_auth_token(auth_token).PermissionLevel)
+	log.Printf("User permissions: %d\n", Verify_User_Auth_Token(auth_token).PermissionLevel)
 	if Verify_Permissions(auth_token, create_users) {
 
 		create_user(user)
@@ -105,30 +109,22 @@ func New_User_From_Object(auth_token string, user User) bool {
 	return false
 }
 
-// Verifies auth token then returns self if Verified
-func Get_Self(auth_token string) User {
-	var user User
-	if Verify_User_Auth_Token(auth_token) {
-		return retrieve_user_auth_token(auth_token)
-	} else {
-		return user
-	}
-}
-
 // Verifies auth token then returns user based on username if verified
 func Get_User(auth_token, username string) User {
 	var user User
 	if Verify_Permissions(auth_token, get_users) {
-		return retrieve_user_auth_token(auth_token)
+		user = Verify_User_Auth_Token(auth_token)
+		log.Printf("Passing Requested User to Function\n")
 	}
 	return user
 }
 
 // takes the current user's auth token and the username and new name of the user to be changed
-func Set_Name(auth_token string, username string, new_name string) {
+func Set_Name(auth_token string, username string, new_name string) int {
 	//Determines if user is editing themselves or someone else and sets permissions accordingly
 	var security_level int
-	if Get_Self(auth_token).Username == username {
+	user := Verify_User_Auth_Token(auth_token)
+	if user.Username == username || username == "" {
 		security_level = edit_self
 	} else {
 		security_level = edit_users
@@ -136,21 +132,30 @@ func Set_Name(auth_token string, username string, new_name string) {
 
 	//Applies change to user
 	if Verify_Permissions(auth_token, security_level) {
-		user := retrieve_user_username(username)
+		if security_level != 0 {
+			user = retrieve_user_username(username)
+		}
+
 		user.Name = new_name
-		if update_user(username, user) {
-			log.Println("Updated")
+		user.Password = ""
+
+		if update_user(user.Username, user) {
+			log.Println("User Name Updated")
+			return Success
 		} else {
-			log.Println("Not Updated")
+			return Data_Already_Exists
 		}
 	}
+
+	return Incorrect_Permissions
 }
 
 // takes the current user's auth token and the old and new username of the user to be changed
-func Set_Username(auth_token string, username string, new_username string) {
+func Set_Username(auth_token string, username string, new_username string) int {
 	//Determines if user is editing themselves or someone else and sets permissions accordingly
 	var security_level int
-	if Get_Self(auth_token).Username == username {
+	user := Verify_User_Auth_Token(auth_token)
+	if user.Username == username || username == "" {
 		security_level = edit_self
 	} else {
 		security_level = edit_users
@@ -158,21 +163,31 @@ func Set_Username(auth_token string, username string, new_username string) {
 
 	//Applies change to user
 	if Verify_Permissions(auth_token, security_level) {
-		user := retrieve_user_username(username)
+		if security_level != 0 {
+			user = retrieve_user_username(username)
+		}
+
+		old_username := user.Username
 		user.Username = new_username
-		if update_user(username, user) {
-			log.Println("Updated")
+		user.Password = ""
+
+		if update_user(old_username, user) {
+			log.Println("User Username Updated")
+			return Success
 		} else {
-			log.Println("Not Updated")
+			return Data_Already_Exists
 		}
 	}
+
+	return Incorrect_Permissions
 }
 
 // takes the current user's auth token and the username and new password of the user to be changed
-func Set_Password(auth_token string, username string, new_password string) {
+func Set_Password(auth_token string, username string, new_password string) int {
 	//Determines if user is editing themselves or someone else and sets permissions accordingly
 	var security_level int
-	if Get_Self(auth_token).Username == username {
+	user := Verify_User_Auth_Token(auth_token)
+	if user.Username == username || username == "" {
 		security_level = edit_self
 	} else {
 		security_level = edit_users
@@ -180,35 +195,49 @@ func Set_Password(auth_token string, username string, new_password string) {
 
 	//Applies change to user
 	if Verify_Permissions(auth_token, security_level) {
-		user := retrieve_user_username(username)
+		if security_level != 0 {
+			user = retrieve_user_username(username)
+		}
+
 		user.Password = new_password
-		if update_user(username, user) {
-			log.Println("Updated")
+
+		if update_user(user.Username, user) {
+			log.Println("User Password Updated")
+			return Success
 		} else {
-			log.Println("Not Updated")
+			return Data_Already_Exists
 		}
 	}
+
+	return Incorrect_Permissions
 }
 
 // takes the current user's auth token and the username and new permission level of the user to be changed
-func Set_Permissions(auth_token string, username string, new_permission int) {
+func Set_Permissions(auth_token string, username string, new_permission int) int {
 	//Checks permissions then applies change to user
 	if Verify_Permissions(auth_token, edit_permissions) {
 		user := retrieve_user_username(username)
+
 		user.PermissionLevel = new_permission
-		if update_user(username, user) {
-			log.Println("Updated")
+		user.Password = ""
+
+		if update_user(user.Username, user) {
+			log.Println("User Permissions Updated")
+			return Success
 		} else {
-			log.Println("Not Updated")
+			return Data_Already_Exists
 		}
 	}
+
+	return Incorrect_Permissions
 }
 
 // takes the current user's auth token and the username and new email of the user to be changed
-func Set_Email(auth_token string, username string, new_email string) {
+func Set_Email(auth_token string, username string, new_email string) int {
 	//Determines if user is editing themselves or someone else and sets permissions accordingly
 	var security_level int
-	if Get_Self(auth_token).Username == username {
+	user := Verify_User_Auth_Token(auth_token)
+	if user.Username == username || username == "" {
 		security_level = edit_self
 	} else {
 		security_level = edit_users
@@ -216,12 +245,20 @@ func Set_Email(auth_token string, username string, new_email string) {
 
 	//Applies change to user
 	if Verify_Permissions(auth_token, security_level) {
-		user := retrieve_user_username(username)
+		if security_level != 0 {
+			user = retrieve_user_username(username)
+		}
+
 		user.Email = new_email
-		if update_user(username, user) {
-			log.Println("Updated")
+		user.Password = ""
+
+		if update_user(user.Username, user) {
+			log.Println("User Email Updated")
+			return Success
 		} else {
-			log.Println("Not Updated")
+			return Data_Already_Exists
 		}
 	}
+
+	return Incorrect_Permissions
 }

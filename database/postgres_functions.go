@@ -2,9 +2,7 @@ package database
 
 import (
 	"context"
-	"fmt"
 	"log"
-	"math/rand/v2"
 	"time"
 
 	"github.com/jackc/pgx/v5/pgxpool"
@@ -43,38 +41,38 @@ CREATE TABLE IF NOT EXISTS users (
 // Database url
 const databaseUrl = "postgres://project-persona:T%7D%3F_%5D0Lu8I98@postgres.blusnake.net:35432/project-persona"
 
-func pgx_examples() {
-	create_users_table()
+// func pgx_examples() {
+// 	create_users_table()
 
-	user := User{
-		Name:            "John Doe",
-		Username:        "johndoe",
-		Password:        "securepassword",
-		Points:          rand.IntN(1000),
-		PermissionLevel: 0,
-		Email:           "john.doe@example.com",
-	}
+// 	user := User{
+// 		Name:            "John Doe",
+// 		Username:        "johndoe",
+// 		Password:        "securepassword",
+// 		Points:          rand.IntN(1000),
+// 		PermissionLevel: 0,
+// 		Email:           "john.doe@example.com",
+// 	}
 
-	create_user(user)
+// 	create_user(user)
 
-	username := "johndoe"
-	user = User{
-		Name:            "Jane Doe",
-		Username:        "janedoe",
-		Password:        "securepassword",
-		Points:          100,
-		PermissionLevel: 1,
-		Email:           "jane.doe@example.com",
-	}
+// 	username := "johndoe"
+// 	user = User{
+// 		Name:            "Jane Doe",
+// 		Username:        "janedoe",
+// 		Password:        "securepassword",
+// 		Points:          100,
+// 		PermissionLevel: 1,
+// 		Email:           "jane.doe@example.com",
+// 	}
 
-	update_user(username, user)
+// 	update_user(username, user)
 
-	retrieve_user_username("Username")
+// 	retrieve_user_username("Username")
 
-	retrieve_user_auth_token("Token")
+// 	retrieve_user_auth_token("Token")
 
-	randomize_auth_token("Token")
-}
+// 	randomize_auth_token("Token")
+// }
 
 //Function for setting up connection ==============================================================
 
@@ -122,10 +120,10 @@ func create_user(user User) {
 
 	compare_user := retrieve_user_username_pass_conn(conn, user.Username)
 	if compare_user.Username == user.Username {
-		fmt.Printf("Username: %s already in use\n", user.Username)
+		log.Printf("Username: %s already in use\n", user.Username)
 		return
 	} else {
-		fmt.Printf("Creating user\n")
+		log.Printf("Creating user\n")
 	}
 
 	user.AuthToken = GenerateUUID()
@@ -144,7 +142,7 @@ func create_user(user User) {
 
 	randomize_auth_token(user.AuthToken)
 
-	fmt.Printf("User inserted with ID: %d\n", userID)
+	log.Printf("User inserted with ID: %d\n", userID)
 }
 
 //Function for editing user data ==================================================================
@@ -156,18 +154,18 @@ func update_user(username string, user User) bool {
 
 	// This checks to see if username is connected to a real user
 	if retrieve_user_username_pass_conn(conn, username).Username != username {
-		fmt.Printf("User: %s does not exist\n", username)
+		log.Printf("User: %s does not exist\n", username)
 		return false
 	}
 	//This checks to make sure the desired info is not already in use
 	compare_user := retrieve_user_username_pass_conn(conn, user.Username)
 	if compare_user.Username == user.Username {
-		fmt.Printf("Username: %s already in use\n", user.Username)
+		log.Printf("Username: %s already in use\n", user.Username)
 		return false
 	}
 
 	if compare_user.Email == user.Email {
-		fmt.Printf("Email: %s already in use\n", user.Email)
+		log.Printf("Email: %s already in use\n", user.Email)
 		return false
 	}
 
@@ -184,7 +182,7 @@ func update_user(username string, user User) bool {
 
 	return true
 
-	//fmt.Printf("User: %s, New Name: %s New Username: %s\n", username, user.Name, user.Username)
+	//log.Printf("User: %s, New Name: %s New Username: %s\n", username, user.Name, user.Username)
 }
 
 //Functions for retrieving user data ==============================================================
@@ -218,7 +216,7 @@ func retrieve_user_username(username string) (user User) {
 		log.Printf("Failed to retrieve user data from username: %v\n", err)
 	}
 
-	//fmt.Printf("User Data: %+v\n", user)
+	//log.Printf("User Data: %+v\n", user)
 
 	return
 }
@@ -251,7 +249,7 @@ func retrieve_user_auth_token(auth_token string) (user User) {
 		log.Printf("Failed to retrieve user data from auth_token: %v\n", err)
 	}
 
-	//fmt.Printf("User Data: %+v\n", user)
+	//log.Printf("User Data: %+v\n", user)
 
 	return
 }
@@ -282,7 +280,7 @@ func retrieve_user_username_pass_conn(conn *pgxpool.Pool, username string) (user
 		log.Printf("No users with that name exist: %v\n", err)
 	}
 
-	//fmt.Printf("User Data: %+v\n", user)
+	//log.Printf("User Data: %+v\n", user)
 
 	return
 }
@@ -307,6 +305,4 @@ func randomize_auth_token(auth_token string) {
 	if err != nil {
 		log.Fatalf("Failed to randomize user's auth_token: %v\n", err)
 	}
-	//time.Now(), time.Now().AddDate(0, 0, 7)
-	//log.Println("Randomizing auth_token")
 }

@@ -3,7 +3,7 @@ package database
 import (
 	"crypto/rand"
 	"encoding/base64"
-	"fmt"
+	"log"
 	"math/big"
 	"strconv"
 	"time"
@@ -52,7 +52,7 @@ func GenerateUUID() string {
 	expires := time.Now().AddDate(0, 0, 7).Unix()
 	num, err := rand.Int(rand.Reader, big.NewInt(int64(10000)))
 	if err != nil {
-		fmt.Println("Error generating random number:", err)
+		log.Println("Error generating random number:", err)
 		return ""
 	}
 
@@ -69,11 +69,11 @@ func Randomize_auth_token(auth_token string) {
 func HashPassword(password string) string {
 	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
 	if err != nil {
-		fmt.Println("Error hashing password:", err)
+		log.Println("Error hashing password:", err)
 		return string(hashedPassword)
 	}
 
-	fmt.Printf("Hashed Password: %s\n", string(hashedPassword))
+	log.Printf("Hashed Password: %s\n", string(hashedPassword))
 
 	return string(hashedPassword)
 }
@@ -83,9 +83,9 @@ func VerifyPassword(hashedPassword, password string) bool {
 	err := bcrypt.CompareHashAndPassword([]byte(hashedPassword), []byte(password))
 	if err != nil {
 		if err == bcrypt.ErrMismatchedHashAndPassword {
-			fmt.Println("Invalid password")
+			log.Println("Invalid password")
 		} else {
-			fmt.Println("Error verifying password:", err)
+			log.Println("Error verifying password:", err)
 		}
 		return false
 	}

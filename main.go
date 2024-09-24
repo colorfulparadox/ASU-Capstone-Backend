@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"fmt"
+	"log"
 	"net/http"
 	"os"
 
@@ -28,8 +29,7 @@ func main() {
 
 	conn, err := pgxpool.New(context.Background(), databaseUrl)
 	if err != nil {
-		fmt.Fprintf(os.Stderr, "Unable to connect to database: %v\n", err)
-		os.Exit(1)
+		log.Fatalf("Unable to connect to database: %v\n", err)
 	}
 	defer conn.Close()
 
@@ -60,7 +60,7 @@ func main() {
 			routeType:  RoutePost,
 			middleware: default_middleware,
 			sender: func(gc *gin.Context, pool *pgxpool.Pool) {
-				fmt.Println("login req")
+				log.Println("login req")
 
 				var loginReq LoginRequest
 
@@ -70,7 +70,7 @@ func main() {
 					return
 				}
 
-				fmt.Println(loginReq)
+				log.Println(loginReq)
 
 				gc.JSON(http.StatusOK, "{\"auth\":\"thisisakey123\"}")
 			},

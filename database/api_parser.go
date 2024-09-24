@@ -27,7 +27,6 @@ func Create_Tables() {
 func Verify_User_Login(username string, password string) string {
 	user := retrieve_user_username(username)
 	if VerifyPassword(user.PasswordHash, password) {
-		log.Println("Authenticated")
 		return user.AuthToken
 	} else {
 		log.Println("Incorrect cridentials")
@@ -39,13 +38,11 @@ func Verify_User_Login(username string, password string) string {
 func Verify_User_Auth_Token(auth_token string) bool {
 	user := retrieve_user_auth_token(auth_token)
 	if user.AuthToken == auth_token {
-		log.Println("Expire date: ", user.DateExpr)
-		log.Println("Current date: ", time.Now().UTC())
 		if user.DateExpr.After(time.Now().UTC()) {
-			log.Printf("Verified")
 			return true
 		}
 		randomize_auth_token(auth_token)
+		log.Println("Auth Token reset")
 	}
 
 	return false

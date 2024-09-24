@@ -2,7 +2,7 @@ package routes
 
 import (
 	"BackEnd/database"
-	"fmt"
+	"log"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
@@ -41,7 +41,7 @@ func Login(gc *gin.Context, pool *pgxpool.Pool) {
 
 	// Checks if user is valid
 	if auth_token == "" {
-		fmt.Println("username or password incorrect")
+		log.Println("username or password incorrect")
 		gc.JSON(http.StatusForbidden, "{}")
 	}
 

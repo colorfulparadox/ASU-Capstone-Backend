@@ -1,17 +1,8 @@
 package main
 
 import (
-	"context"
-	"fmt"
-	"log"
-	"net/http"
-	"os"
-
 	"BackEnd/router"
 	"BackEnd/routes"
-
-	"github.com/gin-gonic/gin"
-	"github.com/jackc/pgx/v5/pgxpool"
 )
 
 // https://pkg.go.dev/github.com/gin-gonic/gin#section-readme
@@ -25,28 +16,8 @@ func main() {
 	//database.Randomize_auth_token("e5eb13a7-cea0-414b-9391-80627e6bb321/cded7614/H64bRKmgCPTyPaWZ1wR-Zg==")
 	//database.Verify_User_Auth_Token("4df4bfb9-476c-4a05-a642-254c0b68b495/cded6d7f/7mBC5dHsv2SvklUpInkjng==")
 	//return
-	databaseUrl := "postgres://project-persona:T%7D%3F_%5D0Lu8I98@postgres.blusnake.net:35432/project-persona"
 
-	conn, err := pgxpool.New(context.Background(), databaseUrl)
-	if err != nil {
-		log.Fatalf("Unable to connect to database: %v\n", err)
-	}
-	defer conn.Close()
-
-	r := router.NewRouter("localhost", "4040", conn)
-
-	router.AddRoute(&r, router.Receiver{
-		Route:     "/getmsg",
-		RouteType: router.RouteGet,
-		Sender: func(gc *gin.Context, pool *pgxpool.Pool) {
-			var msg message
-			err := pool.QueryRow(context.Background(), "select 'Hello, world!'").Scan(&msg.Message)
-			if err != nil {
-				fmt.Fprintf(os.Stderr, "QueryRow failed %v\n", err)
-			}
-			gc.IndentedJSON(http.StatusOK, msg)
-		},
-	})
+	r := router.NewRouter("localhost", "4040")
 
 	router.AddRoute(&r, router.Receiver{
 		Route:     "/login",

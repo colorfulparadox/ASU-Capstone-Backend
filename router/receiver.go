@@ -2,7 +2,6 @@ package router
 
 import (
 	"github.com/gin-gonic/gin"
-	"github.com/jackc/pgx/v5/pgxpool"
 )
 
 type RouteType uint16
@@ -12,8 +11,8 @@ const (
 	RoutePost
 )
 
-type senderFunc func(gc *gin.Context, pool *pgxpool.Pool)
-type middlewareFunc func(gc *gin.Context, pool *pgxpool.Pool)
+type senderFunc func(gc *gin.Context)
+type middlewareFunc func(gc *gin.Context)
 
 type Receiver struct {
 	Route      string
@@ -22,4 +21,4 @@ type Receiver struct {
 	Sender     senderFunc
 }
 
-func default_middleware(gc *gin.Context, pool *pgxpool.Pool) { gc.Next() }
+func default_middleware(gc *gin.Context) { gc.Next() }

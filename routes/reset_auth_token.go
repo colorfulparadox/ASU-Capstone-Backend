@@ -6,7 +6,6 @@ import (
 	"net/http"
 
 	"github.com/gin-gonic/gin"
-	"github.com/jackc/pgx/v5/pgxpool"
 )
 
 type ResetAuthTokens struct {
@@ -15,7 +14,7 @@ type ResetAuthTokens struct {
 }
 
 // Meant to be used in scenarios where you need to log out all devices
-func Reset_Auth_Token(gc *gin.Context, pool *pgxpool.Pool) {
+func Reset_Auth_Token(gc *gin.Context) {
 	var resetAuthTokens ResetAuthTokens
 
 	// Parses JSON received from client

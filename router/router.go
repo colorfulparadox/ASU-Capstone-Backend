@@ -3,21 +3,18 @@ package router
 import (
 	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
-	"github.com/jackc/pgx/v5/pgxpool"
 )
 
 type Router struct {
 	ip     string
 	port   string
 	routes []Receiver
-	pool   *pgxpool.Pool
 	router *gin.Engine
 }
 
 func NewRouter(
 	ip string,
 	port string,
-	pool *pgxpool.Pool,
 ) Router {
 	router := gin.Default()
 
@@ -27,7 +24,7 @@ func NewRouter(
 	config.AllowMethods = []string{"GET", "POST", "PUT", "DELETE", "OPTIONS"}
 	router.Use(cors.New(config))
 
-	return Router{ip: ip, port: port, pool: pool, router: router}
+	return Router{ip: ip, port: port, router: router}
 }
 
 func AddRoute(router *Router, receiver Receiver) {
@@ -41,20 +38,20 @@ func AddRoute(router *Router, receiver Receiver) {
 		router.router.POST(
 			receiver.Route,
 			func(gc *gin.Context) {
-				receiver.Middleware(gc, router.pool)
+				receiver.Middleware(gc)
 			},
 			func(gc *gin.Context) {
-				receiver.Sender(gc, router.pool)
+				receiver.Sender(gc)
 			},
 		)
 	} else {
 		router.router.GET(
 			receiver.Route,
 			func(gc *gin.Context) {
-				receiver.Middleware(gc, router.pool)
+				receiver.Middleware(gc)
 			},
 			func(gc *gin.Context) {
-				receiver.Sender(gc, router.pool)
+				receiver.Sender(gc)
 			},
 		)
 	}

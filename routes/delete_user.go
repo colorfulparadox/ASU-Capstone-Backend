@@ -6,7 +6,6 @@ import (
 	"net/http"
 
 	"github.com/gin-gonic/gin"
-	"github.com/jackc/pgx/v5/pgxpool"
 )
 
 type DeleteUserTokens struct {
@@ -15,7 +14,7 @@ type DeleteUserTokens struct {
 }
 
 // Meant to be used in scenarios where you need to log out all devices
-func Delete_User(gc *gin.Context, pool *pgxpool.Pool) {
+func Delete_User(gc *gin.Context) {
 	var deleteUserTokens DeleteUserTokens
 
 	// Parses JSON received from client

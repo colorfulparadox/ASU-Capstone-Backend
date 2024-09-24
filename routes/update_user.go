@@ -5,7 +5,6 @@ import (
 	"net/http"
 
 	"github.com/gin-gonic/gin"
-	"github.com/jackc/pgx/v5/pgxpool"
 )
 
 type UpdatedData struct {
@@ -22,7 +21,7 @@ type UpdateResult struct {
 	Result []int `json:"result"`
 }
 
-func Update_User(gc *gin.Context, pool *pgxpool.Pool) {
+func Update_User(gc *gin.Context) {
 	var updatedData UpdatedData
 
 	updatedData.PermissionLevel = -1

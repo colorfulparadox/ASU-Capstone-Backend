@@ -6,7 +6,6 @@ import (
 	"net/http"
 
 	"github.com/gin-gonic/gin"
-	"github.com/jackc/pgx/v5/pgxpool"
 )
 
 type UserData struct {
@@ -19,7 +18,7 @@ type UserData struct {
 }
 
 // Creates users
-func Create_User(gc *gin.Context, pool *pgxpool.Pool) {
+func Create_User(gc *gin.Context) {
 	var userData UserData
 
 	// Parses JSON received from client

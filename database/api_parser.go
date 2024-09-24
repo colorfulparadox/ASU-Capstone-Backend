@@ -39,7 +39,10 @@ func Verify_User_Login(username string, password string) string {
 func Verify_User_Auth_Token(auth_token string) bool {
 	user := retrieve_user_auth_token(auth_token)
 	if user.AuthToken == auth_token {
-		if user.DateExpr.After(time.Now()) {
+		log.Println("Expire date: ", user.DateExpr)
+		log.Println("Current date: ", time.Now().UTC())
+		if user.DateExpr.After(time.Now().UTC()) {
+			log.Printf("Verified")
 			return true
 		}
 		randomize_auth_token(auth_token)

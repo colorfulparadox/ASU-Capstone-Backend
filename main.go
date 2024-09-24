@@ -6,7 +6,6 @@ import (
 	"net/http"
 	"os"
 
-	"BackEnd/database"
 	"BackEnd/router"
 	"BackEnd/routes"
 
@@ -22,8 +21,8 @@ type message struct {
 }
 
 func main() {
-	database.Randomize_auth_token("zB82b5xGHVoQiBz2NragQvV4Z5-Gy4aT5xJzCrOKtp0=")
-	//database.New_User_From_Object(database.Verify_User_Login("johndoe", "securepassword"), user)
+	//database.Randomize_auth_token("e5eb13a7-cea0-414b-9391-80627e6bb321/cded7614/H64bRKmgCPTyPaWZ1wR-Zg==")
+	//database.Verify_User_Auth_Token("4df4bfb9-476c-4a05-a642-254c0b68b495/cded6d7f/7mBC5dHsv2SvklUpInkjng==")
 	//return
 	databaseUrl := "postgres://project-persona:T%7D%3F_%5D0Lu8I98@postgres.blusnake.net:35432/project-persona"
 

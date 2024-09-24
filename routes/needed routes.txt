@@ -1,0 +1,3 @@
+route to check an auth token
+route to delete a user
+route to add and subtract points (should only be used by the game)

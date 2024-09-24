@@ -10,7 +10,7 @@ import (
 
 // User struct for holding users while working on them
 type User struct {
-	UserID          int       `json:"user_id"`
+	UserID          int       `json:"id"`
 	Name            string    `json:"name"`
 	Username        string    `json:"username"`
 	Password        string    `json:"password"`
@@ -125,19 +125,24 @@ func create_user(user User) bool {
 	defer conn.Close()
 	defer log.Println("Conn Closed")
 
-	compare_user := retrieve_user_username_pass_conn(conn, user.Username)
-	if compare_user.Username == user.Username || compare_user.Email == user.Email {
-		log.Printf("Username: %s, or Email: %s already in use\n", user.Username, user.Email)
+	username_user, email_user := retrieve_user_pass_conn(conn, user.Username, user.Email)
+	if username_user.Username == user.Username {
+		log.Printf("Username: %s already in use\n", user.Username)
 		return false
-	} else {
-		log.Printf("Creating user\n")
 	}
+
+	if email_user.Email == user.Email {
+		log.Printf("Email: %s already in use\n", user.Email)
+		return false
+	}
+
+	log.Printf("Creating user\n")
 
 	user.AuthToken = GenerateUUID()
 	var userID int
 	// Prepare the SQL statement
 	insertSQL := `INSERT INTO users (name, username, password, password_hash, points, permission_level, email, auth_token, date_issued, date_expr)
-    VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10) RETURNING id;`
+    	VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10) RETURNING id;`
 
 	// Execute the SQL statement using a prepared statement
 	err = conn.QueryRow(context.Background(), insertSQL,
@@ -160,21 +165,21 @@ func update_user(username string, user User) bool {
 	defer conn.Close()
 	defer log.Println("Conn Closed")
 
-	compare_user := retrieve_user_username_pass_conn(conn, username)
+	username_user, email_user := retrieve_user_pass_conn(conn, username, "")
 
 	// This checks to see if username is connected to a real user
-	if compare_user.Username != username {
+	if username_user.Username != username {
 		log.Printf("User: %s does not exist\n", username)
 		return false
 	}
 	//This checks to make sure the desired info is not already in use
-	compare_user = retrieve_user_username_pass_conn(conn, user.Username)
-	if compare_user.UserID != user.UserID {
-		if compare_user.Username == user.Username {
+	username_user, email_user = retrieve_user_pass_conn(conn, user.Username, user.Email)
+	if username_user.UserID != user.UserID {
+		if username_user.Username == user.Username {
 			log.Printf("Username: %s already in use\n", user.Username)
 			return false
 		}
-		if compare_user.Email == user.Email {
+		if email_user.Email == user.Email {
 			log.Printf("Email: %s already in use\n", user.Email)
 			return false
 		}
@@ -216,8 +221,8 @@ func delete_user(username string) bool {
 	defer conn.Close()
 	defer log.Println("Conn Closed")
 
-	user := retrieve_user_username_pass_conn(conn, username)
-	if user.Username == "" {
+	username_user, _ := retrieve_user_pass_conn(conn, username, "")
+	if username_user.Username == "" {
 		log.Printf("User: %s does not exist", username)
 		return false
 	}
@@ -246,8 +251,8 @@ func retrieve_user_username(username string) (user User) {
 
 	// Prepare the SQL statement for selecting the user's data
 	selectUserSQL := `SELECT id, name, username, password, password_hash, points, permission_level, email, auth_token, date_issued, date_expr
-    FROM users
-    WHERE username = $1;`
+    	FROM users
+    	WHERE username = $1;`
 
 	err = conn.QueryRow(context.Background(), selectUserSQL, username).Scan(
 		&user.UserID, //the id variable should not be used outside the backend
@@ -263,9 +268,10 @@ func retrieve_user_username(username string) (user User) {
 		&user.DateExpr,
 	)
 	if err != nil {
-		log.Printf("Failed to retrieve user data from username: %v\n", err)
+		log.Printf("Failed to retrieve user: %s, %v\n", username, err)
+	} else {
+		log.Printf("Retrieved user: %s\n", user.Username)
 	}
-	defer log.Printf("Retrieved user: %s\n", user.Username)
 	return
 }
 
@@ -277,8 +283,8 @@ func retrieve_user_auth_token(auth_token string) (user User) {
 
 	// Prepare the SQL statement for selecting the user's data
 	selectUserSQL := `SELECT id, name, username, password, points, permission_level, email, auth_token, date_issued, date_expr
-    FROM users
-    WHERE auth_token = $1;`
+    	FROM users
+    	WHERE auth_token = $1;`
 
 	err = conn.QueryRow(context.Background(), selectUserSQL, auth_token).Scan(
 		&user.UserID, //the id variable should not be used outside the backend
@@ -293,37 +299,60 @@ func retrieve_user_auth_token(auth_token string) (user User) {
 		&user.DateExpr,
 	)
 	if err != nil {
-		log.Printf("Failed to retrieve user data from auth_token: %v\n", err)
+		log.Printf("Failed to retrieve user: %s, %v\n", user.Username, err)
+	} else {
+		log.Printf("Retrieved user: %s\n", user.Username)
 	}
-	defer log.Printf("Retrieved user: %s\n", user.Username)
 	return
 }
 
 //private version of the Rerieve_user function that uses conn and err so a new connection does not have to be made
 
-func retrieve_user_username_pass_conn(conn *pgxpool.Pool, username string) (user User) {
+func retrieve_user_pass_conn(conn *pgxpool.Pool, username, email string) (username_user, email_user User) {
 	// Prepare the SQL statement for selecting the user's data
 
 	selectUserSQL := `SELECT id, name, username, password, points, permission_level, email, auth_token, date_issued, date_expr
-    FROM users
-    WHERE username = $1;`
+    	FROM users
+    	WHERE username = $1;`
 
 	err := conn.QueryRow(context.Background(), selectUserSQL, username).Scan(
-		&user.UserID, //the id variable should not be used outside the backend
-		&user.Name,
-		&user.Username,
-		&user.Password,
-		&user.Points,
-		&user.PermissionLevel,
-		&user.Email,
-		&user.AuthToken,
-		&user.DateIssued,
-		&user.DateExpr,
+		&username_user.UserID, //the id variable should not be used outside the backend
+		&username_user.Name,
+		&username_user.Username,
+		&username_user.Password,
+		&username_user.Points,
+		&username_user.PermissionLevel,
+		&username_user.Email,
+		&username_user.AuthToken,
+		&username_user.DateIssued,
+		&username_user.DateExpr,
 	)
 	if err != nil {
 		log.Printf("No users with that name exist: %v\n", err)
 	}
 
+	if email != "" {
+
+		selectUserSQL = `SELECT id, name, username, password, points, permission_level, email, auth_token, date_issued, date_expr
+    		FROM users
+    		WHERE username = $1;`
+
+		err = conn.QueryRow(context.Background(), selectUserSQL, username).Scan(
+			&email_user.UserID, //the id variable should not be used outside the backend
+			&email_user.Name,
+			&email_user.Username,
+			&email_user.Password,
+			&email_user.Points,
+			&email_user.PermissionLevel,
+			&email_user.Email,
+			&email_user.AuthToken,
+			&email_user.DateIssued,
+			&email_user.DateExpr,
+		)
+		if err != nil {
+			log.Printf("No users with that email exist: %v\n", err)
+		}
+	}
 	return
 }
 
@@ -336,7 +365,7 @@ func randomize_auth_token(auth_token string) {
 	defer log.Println("Conn Closed")
 
 	updateNameSQL := `UPDATE users SET auth_token = $1, date_issued = $2, date_expr = $3
-	WHERE auth_token = $4;`
+		WHERE auth_token = $4;`
 
 	dateIssued := time.Now().UTC()
 	expires := time.Now().AddDate(0, 0, 7).UTC()

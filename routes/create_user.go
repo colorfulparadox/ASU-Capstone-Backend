@@ -2,7 +2,6 @@ package routes
 
 import (
 	"BackEnd/database"
-	"log"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
@@ -32,12 +31,7 @@ func Create_User(gc *gin.Context) {
 	user_creation_success := database.New_User(userData.AdminAuthID, userData.Name, userData.Username, userData.Password, userData.PermissionLevel, userData.Email)
 
 	// Checks if there was an error
-	switch user_creation_success {
-	case 1:
-		log.Println("User already exists")
-	case 2:
-		log.Println("Invalid Permissions")
-	}
+	UserResults(user_creation_success)
 
 	// Puts int into JSON object
 	userResult := UserResult{

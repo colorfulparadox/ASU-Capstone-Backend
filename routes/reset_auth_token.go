@@ -2,7 +2,6 @@ package routes
 
 import (
 	"BackEnd/database"
-	"log"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
@@ -28,14 +27,7 @@ func Reset_Auth_Token(gc *gin.Context) {
 	user_creation_success := database.Randomize_Auth_Token(resetAuthTokens.CurrentAuthID, resetAuthTokens.ResetUser)
 
 	// Checks if there was an error
-	switch user_creation_success {
-	case 1:
-		// This is an easter egg cause it should never get to this point because the random numbers should never
-		// be the same and if they are there should be a more substantial error handler that should catch it
-		log.Println("Something has gone terribly wrong")
-	case 2:
-		log.Println("Invalid Permissions")
-	}
+	UserResults(user_creation_success)
 
 	// Puts int into JSON object
 	userResult := UserResult{

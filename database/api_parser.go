@@ -24,6 +24,7 @@ const (
 	Success = iota
 	Data_Already_Exists
 	Incorrect_Permissions
+	Invalid_Data
 )
 
 func Create_Tables() {
@@ -145,6 +146,7 @@ func Set_Name(auth_token string, username string, new_name string) int {
 		}
 	}
 
+	// This could also mean that the authID is incorrect
 	return Incorrect_Permissions
 }
 
@@ -165,6 +167,11 @@ func Set_Username(auth_token string, username string, new_username string) int {
 			user = retrieve_user_username(username)
 		}
 
+		if user.Username == "" {
+			log.Println("Provided User does not exist")
+			return Invalid_Data
+		}
+
 		old_username := user.Username
 		user.Username = new_username
 		user.Password = ""
@@ -177,6 +184,7 @@ func Set_Username(auth_token string, username string, new_username string) int {
 		}
 	}
 
+	// This could also mean that the authID is incorrect
 	return Incorrect_Permissions
 }
 
@@ -197,6 +205,11 @@ func Set_Password(auth_token string, username string, new_password string) int {
 			user = retrieve_user_username(username)
 		}
 
+		if user.Username == "" {
+			log.Println("Provided User does not exist")
+			return Invalid_Data
+		}
+
 		user.Password = new_password
 
 		if update_user(user.Username, user) {
@@ -205,6 +218,7 @@ func Set_Password(auth_token string, username string, new_password string) int {
 		}
 	}
 
+	// This could also mean that the authID is incorrect
 	return Incorrect_Permissions
 }
 
@@ -245,6 +259,11 @@ func Set_Email(auth_token string, username string, new_email string) int {
 			user = retrieve_user_username(username)
 		}
 
+		if user.Username == "" {
+			log.Println("Provided User does not exist")
+			return Invalid_Data
+		}
+
 		user.Email = new_email
 		user.Password = ""
 
@@ -256,6 +275,7 @@ func Set_Email(auth_token string, username string, new_email string) int {
 		}
 	}
 
+	// This could also mean that the authID is incorrect
 	return Incorrect_Permissions
 }
 
@@ -276,11 +296,17 @@ func Randomize_Auth_Token(auth_token, username string) int {
 			user = retrieve_user_username(username)
 		}
 
+		if user.Username == "" {
+			log.Println("Provided User does not exist")
+			return Invalid_Data
+		}
+
 		randomize_auth_token(user.AuthToken)
 		log.Println("Authentication Token Randomized")
 		return Success
 	}
 
+	// This could also mean that the authID is incorrect
 	return Incorrect_Permissions
 }
 
@@ -301,10 +327,16 @@ func Delete_User(auth_token, username string) int {
 			user = retrieve_user_username(username)
 		}
 
+		if user.Username == "" {
+			log.Println("Provided User does not exist")
+			return Invalid_Data
+		}
+
 		delete_user(user.Username)
 		log.Println("User Deleted")
 		return Success
 	}
 
+	// This could also mean that the authID is incorrect
 	return Incorrect_Permissions
 }

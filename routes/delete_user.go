@@ -25,10 +25,10 @@ func Delete_User(gc *gin.Context, pool *pgxpool.Pool) {
 		return
 	}
 
-	// Gets the enum int relating to creation (can be found in api_parser starting at line 23)
+	// Gets the enum int relating to results (can be found in api_parser starting at line 23)
 	user_creation_success := database.Delete_User(deleteUserTokens.CurrentAuthID, deleteUserTokens.DeleteUser)
 
-	// Checks if user is valid
+	// Checks if there was an error
 	switch user_creation_success {
 	case 1:
 		// This is an easter egg cause it should never get to this point because deleting should never

@@ -18,6 +18,7 @@ type UserData struct {
 	Email           string `json:"email"`
 }
 
+// Creates users
 func Create_User(gc *gin.Context, pool *pgxpool.Pool) {
 	var userData UserData
 
@@ -28,11 +29,10 @@ func Create_User(gc *gin.Context, pool *pgxpool.Pool) {
 		return
 	}
 
-	// Gets the enum int relating to creation (can be found in api_parser starting at line 23)
+	// Gets the enum int relating to results (can be found in api_parser starting at line 23)
 	user_creation_success := database.New_User(userData.AdminAuthID, userData.Name, userData.Username, userData.Password, userData.PermissionLevel, userData.Email)
 
-	// Checks if user is valid
-
+	// Checks if there was an error
 	switch user_creation_success {
 	case 1:
 		log.Println("User already exists")

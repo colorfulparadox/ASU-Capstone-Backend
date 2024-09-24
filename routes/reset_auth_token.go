@@ -28,7 +28,7 @@ func Reset_Auth_Token(gc *gin.Context, pool *pgxpool.Pool) {
 	// Gets the enum int relating to creation (can be found in api_parser starting at line 23)
 	user_creation_success := database.Randomize_Auth_Token(resetAuthTokens.CurrentAuthID, resetAuthTokens.ResetUser)
 
-	// Checks if user is valid
+	// Checks if there was an error
 	switch user_creation_success {
 	case 1:
 		// This is an easter egg cause it should never get to this point because the random numbers should never

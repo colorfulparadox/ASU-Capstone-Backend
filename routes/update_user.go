@@ -36,7 +36,7 @@ func Update_User(gc *gin.Context, pool *pgxpool.Pool) {
 
 	var user_update_success []int
 
-	// Gets the enum int relating to creation (can be found in api_parser starting at line 23)
+	// Gets the enum int relating to results (can be found in api_parser starting at line 23)
 	if updatedData.Name != "" {
 		user_update_success = append(user_update_success, database.Set_Name(updatedData.UserAuthID, updatedData.Edit_User, updatedData.Name))
 	}

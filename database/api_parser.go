@@ -19,7 +19,7 @@ const (
 	delete_users     = 1
 )
 
-// An enum to show if a user was created or if not what error was thrown
+// An enum to show the result of a transaction
 const (
 	Success = iota
 	Data_Already_Exists
@@ -259,8 +259,9 @@ func Set_Email(auth_token string, username string, new_email string) int {
 	return Incorrect_Permissions
 }
 
+// Randomizes the user auth token
 func Randomize_Auth_Token(auth_token, username string) int {
-	//Determines if user is editing themselves or someone else and sets permissions accordingly
+	// Determines if user is editing themselves or someone else and sets permissions accordingly
 	var security_level int
 	user := Verify_User_Auth_Token(auth_token)
 	if user.Username == username || username == "" {
@@ -283,6 +284,7 @@ func Randomize_Auth_Token(auth_token, username string) int {
 	return Incorrect_Permissions
 }
 
+// Deletes a specified user
 func Delete_User(auth_token, username string) int {
 	//Determines if user is editing themselves or someone else and sets permissions accordingly
 	var security_level int

@@ -1,2 +1,3 @@
 route to check an auth token
 route to add and subtract points (should only be used by the game)
+route to return the user data (could be combined with route for auth token)

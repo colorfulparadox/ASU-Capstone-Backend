@@ -18,10 +18,6 @@ type UserData struct {
 	Email           string `json:"email"`
 }
 
-type UserResult struct {
-	Result int `json:"result"`
-}
-
 func Create_User(gc *gin.Context, pool *pgxpool.Pool) {
 	var userData UserData
 

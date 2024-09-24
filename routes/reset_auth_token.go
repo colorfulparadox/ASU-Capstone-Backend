@@ -9,27 +9,26 @@ import (
 	"github.com/jackc/pgx/v5/pgxpool"
 )
 
-type AuthTokens struct {
+type ResetAuthTokens struct {
 	CurrentAuthID string `json:"authID"`
 	ResetUser     string `json:"username"`
 }
 
 // Meant to be used in scenarios where you need to log out all devices
 func Reset_Auth_Token(gc *gin.Context, pool *pgxpool.Pool) {
-	var authTokens AuthTokens
+	var resetAuthTokens ResetAuthTokens
 
 	// Parses JSON received from client
-	err := gc.ShouldBindJSON(&authTokens)
+	err := gc.ShouldBindJSON(&resetAuthTokens)
 	if err != nil {
 		gc.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
 
 	// Gets the enum int relating to creation (can be found in api_parser starting at line 23)
-	user_creation_success := database.Randomize_Auth_Token(authTokens.CurrentAuthID, authTokens.ResetUser)
+	user_creation_success := database.Randomize_Auth_Token(resetAuthTokens.CurrentAuthID, resetAuthTokens.ResetUser)
 
 	// Checks if user is valid
-
 	switch user_creation_success {
 	case 1:
 		// This is an easter egg cause it should never get to this point because the random numbers should never

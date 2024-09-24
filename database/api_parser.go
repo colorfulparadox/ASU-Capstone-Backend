@@ -142,8 +142,6 @@ func Set_Name(auth_token string, username string, new_name string) int {
 		if update_user(user.Username, user) {
 			log.Println("User Name Updated")
 			return Success
-		} else {
-			return Data_Already_Exists
 		}
 	}
 
@@ -204,8 +202,6 @@ func Set_Password(auth_token string, username string, new_password string) int {
 		if update_user(user.Username, user) {
 			log.Println("User Password Updated")
 			return Success
-		} else {
-			return Data_Already_Exists
 		}
 	}
 
@@ -258,6 +254,30 @@ func Set_Email(auth_token string, username string, new_email string) int {
 		} else {
 			return Data_Already_Exists
 		}
+	}
+
+	return Incorrect_Permissions
+}
+
+func Randomize_Auth_Token(auth_token, username string) int {
+	//Determines if user is editing themselves or someone else and sets permissions accordingly
+	var security_level int
+	user := Verify_User_Auth_Token(auth_token)
+	if user.Username == username || username == "" {
+		security_level = edit_self
+	} else {
+		security_level = edit_users
+	}
+
+	//Applies change to user
+	if Verify_Permissions(auth_token, security_level) {
+		if security_level != 0 {
+			user = retrieve_user_username(username)
+		}
+
+		randomize_auth_token(user.AuthToken)
+		log.Println("Authentication Token Randomized")
+		return Success
 	}
 
 	return Incorrect_Permissions

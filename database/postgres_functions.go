@@ -314,6 +314,8 @@ func randomize_auth_token(auth_token string) {
 
 	token := GenerateUUID()
 
+	log.Println("Randomizing Authentication Token")
+
 	// Execute the SQL statement using a prepared statement
 	_, err = conn.Exec(context.Background(), updateNameSQL, token, dateIssued, expires, auth_token)
 	if err != nil {

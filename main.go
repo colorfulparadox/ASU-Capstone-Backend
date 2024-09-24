@@ -66,6 +66,12 @@ func main() {
 		Sender:    routes.Update_User,
 	})
 
+	router.AddRoute(&r, router.Receiver{
+		Route:     "/reset_auth_token",
+		RouteType: router.RoutePost,
+		Sender:    routes.Reset_Auth_Token,
+	})
+
 	/*
 		add_route(&router, Receiver{
 			route:      "/login",

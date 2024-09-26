@@ -40,7 +40,7 @@ CREATE TABLE IF NOT EXISTS users (
 );`
 
 // Database url
-const databaseUrl = "postgres://project-persona:T%7D%3F_%5D0Lu8I98@postgres.blusnake.net:35432/project-persona"
+const databaseUrl = "postgres://project-persona:jZFnGNY7yc6QYb2H@postgres.blusnake.net:35432/project-persona"
 
 // func pgx_examples() {
 // 	create_users_table()

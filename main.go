@@ -9,16 +9,8 @@ import (
 // https://pkg.go.dev/github.com/gin-gonic/gin#section-readme
 // https://go.dev/doc/tutorial/web-service-gin
 
-type message struct {
-	Message string `json:"message"`
-}
-
 func main() {
 	database.Create_Tables()
-
-	//database.Randomize_auth_token("e5eb13a7-cea0-414b-9391-80627e6bb321/cded7614/H64bRKmgCPTyPaWZ1wR-Zg==")
-	//database.Verify_User_Auth_Token("4df4bfb9-476c-4a05-a642-254c0b68b495/cded6d7f/7mBC5dHsv2SvklUpInkjng==")
-	//return
 
 	r := router.NewRouter("localhost", "4040")
 

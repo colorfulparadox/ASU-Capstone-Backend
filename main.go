@@ -52,6 +52,12 @@ func main() {
 		Sender:    routes.Delete_User,
 	})
 
+	router.AddRoute(&r, router.Receiver{
+		Route:     "/authenticate",
+		RouteType: router.RoutePost,
+		Sender:    routes.Authenticate,
+	})
+
 	/*
 		add_route(&router, Receiver{
 			route:      "/login",

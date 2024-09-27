@@ -279,6 +279,24 @@ func Set_Email(auth_token string, username string, new_email string) int {
 	return Incorrect_Permissions
 }
 
+func Modify_Points(auth_token string, points int) int {
+	//Validates token then adds points to user
+	user := Verify_User_Auth_Token(auth_token)
+	if user.Username != "" {
+		user.Points += points
+
+		// Minimum number of points is 0
+		if user.Points < 0 {
+			user.Points = 0
+		}
+
+		return user.Points
+	}
+
+	// Returns -1 if auth_token is invalid
+	return -1
+}
+
 // Randomizes the user auth token
 func Randomize_Auth_Token(auth_token, username string) int {
 	// Determines if user is editing themselves or someone else and sets permissions accordingly

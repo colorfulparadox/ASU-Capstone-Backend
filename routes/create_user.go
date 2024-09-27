@@ -7,7 +7,7 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-type UserData struct {
+type CreateUserData struct {
 	AdminAuthID     string `json:"authID"`
 	Name            string `json:"name"`
 	Username        string `json:"username"`
@@ -18,17 +18,17 @@ type UserData struct {
 
 // Creates users
 func Create_User(gc *gin.Context) {
-	var userData UserData
+	var createUserData CreateUserData
 
 	// Parses JSON received from client
-	err := gc.ShouldBindJSON(&userData)
+	err := gc.ShouldBindJSON(&createUserData)
 	if err != nil {
 		gc.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
 
 	// Gets the enum int relating to results (can be found in api_parser starting at line 23)
-	user_creation_success := database.New_User(userData.AdminAuthID, userData.Name, userData.Username, userData.Password, userData.PermissionLevel, userData.Email)
+	user_creation_success := database.New_User(createUserData.AdminAuthID, createUserData.Name, createUserData.Username, createUserData.Password, createUserData.PermissionLevel, createUserData.Email)
 
 	// Checks if there was an error
 	UserResults(user_creation_success)

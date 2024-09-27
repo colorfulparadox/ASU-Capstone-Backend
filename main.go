@@ -58,6 +58,12 @@ func main() {
 		Sender:    routes.Authenticate,
 	})
 
+	router.AddRoute(&r, router.Receiver{
+		Route:     "/modify_points",
+		RouteType: router.RoutePost,
+		Sender:    routes.ModifyPoints,
+	})
+
 	/*
 		add_route(&router, Receiver{
 			route:      "/login",

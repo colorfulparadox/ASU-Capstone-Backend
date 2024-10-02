@@ -12,7 +12,7 @@ import (
 func main() {
 	database.Create_Tables()
 
-	r := router.NewRouter("localhost", "4040")
+	r := router.NewRouter("0.0.0.0", "4040")
 
 	router.AddRoute(&r, router.Receiver{
 		Route:     "/login",

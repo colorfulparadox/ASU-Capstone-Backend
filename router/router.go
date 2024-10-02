@@ -19,8 +19,6 @@ func NewRouter(
 	router := gin.Default()
 
 	config := cors.DefaultConfig()
-	config.AllowOrigins = append(config.AllowOrigins, "*")
-	//config.AllowAllOrigins = true //we will want to disable that some day
 	config.AllowMethods = []string{"GET", "POST", "PUT", "DELETE", "OPTIONS"}
 	router.Use(cors.New(config))
 

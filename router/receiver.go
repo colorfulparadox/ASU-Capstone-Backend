@@ -12,13 +12,14 @@ const (
 )
 
 type senderFunc func(gc *gin.Context)
-type middlewareFunc func(gc *gin.Context)
+
+//type middlewareFunc func(gc *gin.Context)
 
 type Receiver struct {
-	Route      string
-	RouteType  RouteType
-	Middleware middlewareFunc
-	Sender     senderFunc
+	Route     string
+	RouteType RouteType
+	//Middleware middlewareFunc
+	Sender senderFunc
 }
 
-func default_middleware(gc *gin.Context) { gc.Next() }
+//func default_middleware(gc *gin.Context) { gc.Next() }

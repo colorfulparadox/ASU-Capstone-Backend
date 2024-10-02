@@ -62,28 +62,5 @@ func main() {
 		Sender:    routes.ModifyPoints,
 	})
 
-	/*
-		add_route(&router, Receiver{
-			route:      "/login",
-			routeType:  RoutePost,
-			middleware: default_middleware,
-			sender: func(gc *gin.Context, pool *pgxpool.Pool) {
-				log.Println("login req")
-
-				var loginReq LoginRequest
-
-				err := gc.ShouldBindJSON(&loginReq)
-				if err != nil {
-					gc.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
-					return
-				}
-
-				log.Println(loginReq)
-
-				gc.JSON(http.StatusOK, "{\"auth\":\"thisisakey123\"}")
-			},
-		})
-	*/
-
 	router.RunRouter(r)
 }

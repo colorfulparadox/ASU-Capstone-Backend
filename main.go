@@ -15,6 +15,12 @@ func main() {
 	r := router.NewRouter("0.0.0.0", "4040")
 
 	router.AddRoute(&r, router.Receiver{
+		Route:     "/ping",
+		RouteType: router.RouteGet,
+		Sender:    routes.Ping,
+	})
+
+	router.AddRoute(&r, router.Receiver{
 		Route:     "/login",
 		RouteType: router.RoutePost,
 		Sender:    routes.Login,

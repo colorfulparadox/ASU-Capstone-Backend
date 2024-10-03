@@ -1,0 +1,7 @@
+first install google cloud cli
+
+commands to push docker image to google cloud
+
+docker build <IMAGE NAME> .
+docker tag backend us-west2-docker.pkg.dev/project-persona-436923/backend/backend
+docker push us-west2-docker.pkg.dev/project-persona-436923/backend/backend

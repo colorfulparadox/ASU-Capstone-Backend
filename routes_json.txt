@@ -1,0 +1,57 @@
+"authenticate" :
+
+{
+	"authID" : "string: user auth id"
+}
+
+"create_user" :
+
+{
+	"authID" : "string: admin users auth id",
+	"name" : "string: name of user to create",
+	"username" : "string: username of user to create",
+	"password" : "string: password of user to create",
+	"permission_level" : "int: created users permission level",
+	"email" : "string: email of user to create"
+}
+
+"delete_user" :
+
+{
+	"authID" : "string: admin users auth id",
+	"username" : "string: username of user to be deleted",
+}
+
+"login" :
+
+{
+	"username" : "string: username of user",
+	"password" : "string: password of user"
+}
+
+"modify points" :
+
+{
+	"authID" : "string: admin users auth id",
+    "point_type" : "int: NOT CURRENTLY IMPLEMENTED the type of points ex: sentiment, time, etc.",
+	"points" : "int: points to increase the users points by"
+}
+
+"reset auth id" :
+
+{
+	"authID" : "string: auth id",
+	"username" : "string: username of user",
+}
+
+"update user" : "only needed values in the request are authID and edit_user the rest is optional"
+
+{
+	"authID" : "string: auth id of the person editing the user",
+	"edit_user" : "string: username of user to be edited",
+	"name" : "string: new name",
+	"username" : "string: new username",
+	"password" : "string: new password",
+	"permission_level" : "int: new permission level",
+	"email" : "string: new email"
+}

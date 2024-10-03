@@ -7,8 +7,16 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
+const (
+	Sentiment = iota
+	Time
+	Knowledge
+	Salesmanship
+)
+
 type SelectPoints struct {
 	AdminAuthID string `json:"authID"`
+	PointType   int    `json:"point_type"`
 	Points      int    `java:"points"`
 }
 

@@ -55,3 +55,10 @@
 	"permission_level" : "int: new permission level",
 	"email" : "string: new email"
 }
+
+"user list" :
+
+{
+	"authID" : "string: auth id of the user"
+	"admin" : "bool: whether you want the admin or normal user version of the page"
+}

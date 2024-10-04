@@ -84,6 +84,8 @@ func Get_User_List(auth_token string) [][]string {
 		for i := 0; i < len(userList); i++ {
 			users = append(users, []string{userList[i].Name, userList[i].Username, strconv.Itoa(userList[i].Points)})
 		}
+
+		log.Println("All users returned")
 	}
 
 	return users

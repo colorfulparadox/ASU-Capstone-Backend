@@ -347,7 +347,7 @@ func retrieve_user_list() []User {
 	defer log.Println("Conn Closed")
 
 	var userList []User
-	current_user := 0
+	current_user := 1
 
 	for {
 		var user User
@@ -369,11 +369,13 @@ func retrieve_user_list() []User {
 			&user.DateExpr,
 		)
 		if err != nil {
-			log.Printf("Finished retrieving all: %d users\n Returned error was: %v)\n", current_user, err)
+			log.Printf("Finished retrieving all: %d users\n", current_user-1)
+			log.Printf("Returned error was: %v\n", err)
 			break
 		} else {
 			log.Printf("Retrieved user: %s\n", user.Username)
 			userList = append(userList, user)
+			current_user++
 			continue
 		}
 	}

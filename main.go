@@ -15,10 +15,11 @@ func main() {
 	r := router.NewRouter(":4040")
 
 	router.AddRoute(&r, router.Receiver{
-		Route:      "/ping",
-		RouteType:  router.RouteGet,
-		Middleware: router.User_Role_Middleware("role"),
-		Sender:     routes.Ping,
+		Route:     "/ping",
+		RouteType: router.RouteGet,
+		// This assigns the user role middleware and requires the user value in the header to be "role"
+		// Middleware: router.User_Role_Middleware("role"),
+		Sender: routes.Ping,
 	})
 
 	router.AddRoute(&r, router.Receiver{

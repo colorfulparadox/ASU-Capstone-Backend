@@ -49,12 +49,11 @@ func establish_connection() (conn *pgxpool.Pool) {
 	var dsn string
 
 	if os.Getenv("MODE") == "release" {
-		host := os.Getenv("DB_HOST")
-		port := os.Getenv("DB_PORT")
+		host := "/cloudsql/" + os.Getenv("CLOUD_SQL_CONNECTION_NAME")
 		user := os.Getenv("DB_USER")
 		password := os.Getenv("DB_PASS")
 		dbname := os.Getenv("DB_NAME")
-		dsn = "host=" + host + " port=" + port + " user=" + user + " password=" + password + " dbname=" + dbname + " sslmode=disable"
+		dsn = "host=" + host + " user=" + user + " password=" + password + " dbname=" + dbname + " sslmode=disable"
 	} else {
 		dsn = "host=postgres.blusnake.net port=35432 user=project-persona password=jZFnGNY7yc6QYb2H dbname=project-persona sslmode=disable"
 	}

@@ -12,12 +12,13 @@ import (
 func main() {
 	database.Create_Tables()
 
-	r := router.NewRouter("0.0.0.0", "4040")
+	r := router.NewRouter(":4040")
 
 	router.AddRoute(&r, router.Receiver{
-		Route:     "/ping",
-		RouteType: router.RouteGet,
-		Sender:    routes.Ping,
+		Route:      "/ping",
+		RouteType:  router.RouteGet,
+		Middleware: router.User_Role_Middleware("role"),
+		Sender:     routes.Ping,
 	})
 
 	router.AddRoute(&r, router.Receiver{
@@ -60,6 +61,12 @@ func main() {
 		Route:     "/modify_points",
 		RouteType: router.RoutePost,
 		Sender:    routes.ModifyPoints,
+	})
+
+	router.AddRoute(&r, router.Receiver{
+		Route:     "/user_list",
+		RouteType: router.RoutePost,
+		Sender:    routes.UserList,
 	})
 
 	router.RunRouter(r)

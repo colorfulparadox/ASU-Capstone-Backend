@@ -7,6 +7,10 @@ COPY go.mod go.sum ./
 RUN go mod download && go mod verify
 EXPOSE 4040
 
+ENV MODE=release
+
+ENV GIN_MODE=release
+
 ENV DB_HOST=postgres.blusnake.net
 ENV DB_PORT=35432
 ENV DB_USER=project-persona

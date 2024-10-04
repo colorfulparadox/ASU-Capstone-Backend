@@ -1,21 +1,17 @@
 package router
 
 import (
+	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
 )
 
 type Router struct {
-	ip   string
-	port string
-	//routes []Receiver
+	port   string
 	router *gin.Engine
 }
 
-func NewRouter(
-	ip string,
-	port string,
-) Router {
-	router := gin.Default()
+func NewRouter(port string) Router {
+	router := gin.New()
 
 	// config := cors.DefaultConfig()
 	// config.AllowOrigins = append(config.AllowOrigins, "*")
@@ -23,39 +19,27 @@ func NewRouter(
 	// config.AllowMethods = []string{"GET", "POST", "PUT", "DELETE", "OPTIONS"}
 	// router.Use(cors.New(config))
 
-	return Router{ip: ip, port: port, router: router}
+	router.Use(gin.Logger())
+	router.Use(gin.Recovery())
+	router.Use(cors.Default())
+
+	return Router{port: port, router: router}
 }
 
-func AddRoute(router *Router, receiver Receiver) {
+func AddRoute(r *Router, receiver Receiver) {
 	//router.routes = append(router.routes, receiver)
 
-	// if receiver.Middleware == nil {
-	// 	receiver.Middleware = default_middleware
-	// }
+	if receiver.Middleware == nil {
+		receiver.Middleware = default_middleware()
+	}
 
 	if receiver.RouteType == RoutePost {
-		router.router.POST(
-			receiver.Route,
-			// func(gc *gin.Context) {
-			// 	receiver.Middleware(gc)
-			// },
-			func(gc *gin.Context) {
-				receiver.Sender(gc)
-			},
-		)
+		r.router.POST(receiver.Route, receiver.Middleware, receiver.Sender)
 	} else {
-		router.router.GET(
-			receiver.Route,
-			// func(gc *gin.Context) {
-			// 	receiver.Middleware(gc)
-			// },
-			func(gc *gin.Context) {
-				receiver.Sender(gc)
-			},
-		)
+		r.router.GET(receiver.Route, receiver.Middleware, receiver.Sender)
 	}
 }
 
-func RunRouter(router Router) {
-	router.router.Run(router.ip + ":" + router.port)
+func RunRouter(r Router) {
+	r.router.Run(r.port)
 }

@@ -40,56 +40,24 @@ CREATE TABLE IF NOT EXISTS users (
     date_expr TIMESTAMP NOT NULL
 );`
 
-// Database url
-const databaseUrl = "postgres://project-persona:jZFnGNY7yc6QYb2H@postgres.blusnake.net:35432/project-persona"
-
-// func pgx_examples() {
-// 	create_users_table()
-
-// 	user := User{
-// 		Name:            "John Doe",
-// 		Username:        "johndoe",
-// 		Password:        "securepassword",
-// 		Points:          rand.IntN(1000),
-// 		PermissionLevel: 0,
-// 		Email:           "john.doe@example.com",
-// 	}
-
-// 	create_user(user)
-
-// 	username := "johndoe"
-// 	user = User{
-// 		Name:            "Jane Doe",
-// 		Username:        "janedoe",
-// 		Password:        "securepassword",
-// 		Points:          100,
-// 		PermissionLevel: 1,
-// 		Email:           "jane.doe@example.com",
-// 	}
-
-// 	update_user(username, user)
-
-// 	retrieve_user_username("Username")
-
-// 	retrieve_user_auth_token("Token")
-
-// 	randomize_auth_token("Token")
-// }
-
 //Function for setting up connection ==============================================================
 
 func establish_connection() (conn *pgxpool.Pool) {
 	// Set up connection to the PostgreSQL server
 	var err error
-	host := os.Getenv("DB_HOST")
-	port := os.Getenv("DB_PORT")
-	user := os.Getenv("DB_USER")
-	password := os.Getenv("DB_PASS")
-	dbname := os.Getenv("DB_NAME")
-	dsn := "host=" + host + " port=" + port + " user=" + user + " password=" + password + " dbname=" + dbname + " sslmode=disable"
 
-	// dsn := "host=postgres.blusnake.net port=35432 user=project-persona password=jZFnGNY7yc6QYb2H dbname=project-persona sslmode=disable"
+	var dsn string
 
+	if os.Getenv("MODE") == "release" {
+		host := os.Getenv("DB_HOST")
+		port := os.Getenv("DB_PORT")
+		user := os.Getenv("DB_USER")
+		password := os.Getenv("DB_PASS")
+		dbname := os.Getenv("DB_NAME")
+		dsn = "host=" + host + " port=" + port + " user=" + user + " password=" + password + " dbname=" + dbname + " sslmode=disable"
+	} else {
+		dsn = "host=postgres.blusnake.net port=35432 user=project-persona password=jZFnGNY7yc6QYb2H dbname=project-persona sslmode=disable"
+	}
 	conn, err = pgxpool.New(context.Background(), dsn)
 	if err != nil {
 		log.Fatalf("INTERNAL: Unable to connect to database: %v\n", err)
@@ -368,6 +336,49 @@ func retrieve_user_pass_conn(conn *pgxpool.Pool, username, email string) (userna
 	}
 	log.Println(username_user.UserID, email_user.UserID)
 	return
+}
+
+//Function for retrieving a list of all users =====================================================
+
+func retrieve_user_list() []User {
+	conn := establish_connection()
+	var err error
+	defer conn.Close()
+	defer log.Println("Conn Closed")
+
+	var userList []User
+	current_user := 0
+
+	for {
+		var user User
+		// Prepare the SQL statement for selecting the user's data
+		selectUserSQL := `SELECT id, name, username, password, points, permission_level, email, auth_token, date_issued, date_expr
+			FROM users
+			WHERE id = $1;`
+
+		err = conn.QueryRow(context.Background(), selectUserSQL, current_user).Scan(
+			&user.UserID, //the id variable should not be used outside the backend
+			&user.Name,
+			&user.Username,
+			&user.Password,
+			&user.Points,
+			&user.PermissionLevel,
+			&user.Email,
+			&user.AuthToken,
+			&user.DateIssued,
+			&user.DateExpr,
+		)
+		if err != nil {
+			log.Printf("Finished retrieving all: %d users\n Returned error was: %v)\n", current_user, err)
+			break
+		} else {
+			log.Printf("Retrieved user: %s\n", user.Username)
+			userList = append(userList, user)
+			continue
+		}
+	}
+
+	return userList
 }
 
 //Function for randomizing auth token ============================================================

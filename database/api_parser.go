@@ -5,18 +5,21 @@ package database
 
 import (
 	"log"
+	"strconv"
 	"time"
 )
 
 // An enum for the security level of certain actions
 const (
-	create_users     = 1
-	get_users        = 1
-	edit_self        = 0
-	edit_users       = 1
-	edit_permissions = 1
-	delete_self      = 0
-	delete_users     = 1
+	create_users        = 1
+	get_users           = 1
+	get_user_list       = 0
+	get_admin_user_list = 1
+	edit_self           = 0
+	edit_users          = 1
+	edit_permissions    = 1
+	delete_self         = 0
+	delete_users        = 1
 )
 
 // An enum to show the result of a transaction
@@ -72,6 +75,30 @@ func Verify_Permissions(auth_token string, security_level int) bool {
 		log.Printf("User: %s is not allowed to perform that action\n", user.Username)
 		return false
 	}
+}
+
+func Get_User_List(auth_token string) [][]string {
+	var users [][]string
+	if Verify_Permissions(auth_token, get_user_list) {
+		userList := retrieve_user_list()
+		for i := 0; i < len(userList); i++ {
+			users = append(users, []string{userList[i].Name, userList[i].Username, strconv.Itoa(userList[i].Points)})
+		}
+	}
+
+	return users
+}
+
+func Get_Admin_User_List(auth_token string) [][]string {
+	var users [][]string
+	if Verify_Permissions(auth_token, get_admin_user_list) {
+		userList := retrieve_user_list()
+		for i := 0; i < len(userList); i++ {
+			users = append(users, []string{userList[i].Name, userList[i].Username, userList[i].Email, strconv.Itoa(userList[i].PermissionLevel), strconv.Itoa(userList[i].Points)})
+		}
+	}
+
+	return users
 }
 
 // Adds a user to the database

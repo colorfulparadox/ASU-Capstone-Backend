@@ -42,6 +42,8 @@ func Delete_User(gc *gin.Context) {
 		Result: user_creation_success,
 	}
 
+	UserResults(userResult.Result)
+
 	// Returns userResult
 	gc.JSON(http.StatusOK, userResult)
 }

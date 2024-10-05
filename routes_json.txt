@@ -1,64 +1,124 @@
 "authenticate" :
 
-{
-	"authID" : "string: user auth id"
-}
+	{
+		"authID" : "string: user auth id"
+	}
+
+	{
+		"verified": bool: whether the request was succesful,
+		"name": "string: users name",
+		"username": "string: users username",
+		"points": int: number of points,
+		"permission_level": int: user permission level,
+		"email": "string: user email"
+	}
 
 "create_user" :
 
-{
-	"authID" : "string: admin users auth id",
-	"name" : "string: name of user to create",
-	"username" : "string: username of user to create",
-	"password" : "string: password of user to create",
-	"permission_level" : "int: created users permission level",
-	"email" : "string: email of user to create"
-}
+	{
+		"authID" : "string: admin users auth id",
+		"name" : "string: name of user to create",
+		"username" : "string: username of user to create",
+		"password" : "string: password of user to create",
+		"permission_level" : "int: created users permission level",
+		"email" : "string: email of user to create"
+	}
+
+	{"result": int: results based off an enum posted in the documentation channel}
 
 "delete_user" :
 
-{
-	"authID" : "string: admin users auth id",
-	"username" : "string: username of user to be deleted",
-}
+	{
+		"authID" : "string: admin users auth id",
+		"username" : "string: username of user to be deleted",
+	}
+
+	{"result": int: results based off an enum posted in the documentation channel}
 
 "login" :
 
-{
-	"username" : "string: username of user",
-	"password" : "string: password of user"
-}
+	{
+		"username" : "string: username of user",
+		"password" : "string: password of user"
+	}
+
+	{"authID": "string: the auth id of the user"}
 
 "modify points" :
 
-{
-	"authID" : "string: admin users auth id",
-    "point_type" : "int: NOT CURRENTLY IMPLEMENTED the type of points ex: sentiment, time, etc.",
-	"points" : "int: points to increase the users points by"
-}
+	{
+		"authID" : "string: admin users auth id",
+		"point_type" : "int: NOT CURRENTLY IMPLEMENTED the type of points ex: sentiment, time, etc.",
+		"points" : "int: points to increase the users points by"
+	}
+
+	{
+		"verified": bool: whether the request was succesful or not,
+		"points": int: users points
+	}
 
 "reset auth id" :
 
-{
-	"authID" : "string: auth id",
-	"username" : "string: username of user",
-}
+	{
+		"authID" : "string: auth id",
+		"username" : "string: username of user",
+	}
+
+	{"result": int: results based off an enum posted in the documentation channel}
 
 "update user" : "only needed values in the request are authID and edit_user the rest is optional"
 
-{
-	"authID" : "string: auth id of the person editing the user",
-	"edit_user" : "string: username of user to be edited",
-	"name" : "string: new name",
-	"username" : "string: new username",
-	"password" : "string: new password",
-	"permission_level" : "int: new permission level",
-	"email" : "string: new email"
-}
+	{
+		"authID" : "string: auth id of the person editing the user",
+		"edit_user" : "string: username of user to be edited",
+		"name" : "string: new name",
+		"username" : "string: new username",
+		"password" : "string: new password",
+		"permission_level" : "int: new permission level",
+		"email" : "string: new email"
+	}
+
+	{"result": a list of results for each value changed[
+		int: results based off an enum posted in the documentation channel,
+		int: results based off an enum posted in the documentation channel
+	]}
 
 "user list" :
 
-{
-	"authID" : "string: auth id of the user"
-	"admin" : "bool: whether you want the admin or normal user version of the page"
-}
+	{
+		"authID" : "string: auth id of the user"
+		"admin" : "bool: whether you want the admin or normal user version of the page"
+	}
+
+	[ list of all the users
+		{
+			"name": "John Doe",
+			"username": "johndoe",
+			"points": 0
+		},
+		{
+			"name": "Jane Doe",
+			"username": "janedoe",
+			"points": 0
+		},
+		{
+			"name": "Grace",
+			"username": "grace67",
+			"points": 0
+		},
+		{
+			"name": "Alice",
+			"username": "alice31",
+			"points": 0
+		},
+		{
+			"name": "Charlie",
+			"username": "charlie78",
+			"points": 0
+		},
+		{
+			"name": "Jack",
+			"username": "jack68",
+			"points": 0
+		}
+	]

@@ -11,6 +11,8 @@ type UserResult struct {
 
 func UserResults(user_creation_success int) {
 	switch user_creation_success {
+	case 0:
+		log.Println("Successful")
 	case 1:
 		log.Println("User already exists")
 	case 2:

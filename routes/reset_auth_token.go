@@ -26,13 +26,13 @@ func Reset_Auth_Token(gc *gin.Context) {
 	// Gets the enum int relating to creation (can be found in api_parser starting at line 23)
 	user_creation_success := database.Randomize_Auth_Token(resetAuthTokens.CurrentAuthID, resetAuthTokens.ResetUser)
 
-	// Checks if there was an error
-	UserResults(user_creation_success)
-
 	// Puts int into JSON object
 	userResult := UserResult{
 		Result: user_creation_success,
 	}
+
+	// Checks if there was an error
+	UserResults(user_creation_success)
 
 	// Returns userResult
 	gc.JSON(http.StatusOK, userResult)

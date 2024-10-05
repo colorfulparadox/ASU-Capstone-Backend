@@ -62,12 +62,19 @@ func Verify_User_Auth_Token(auth_token string) User {
 	}
 	log.Println("Invalid Auth Token")
 	var empty_user User
+	empty_user.PermissionLevel = -1
 	return empty_user
 }
 
 // Verifies the current user has the permissions to perform an action
 func Verify_Permissions(auth_token string, security_level int) bool {
 	user := Verify_User_Auth_Token(auth_token)
+
+	if user.PermissionLevel == -1 {
+		log.Println("Invalid permissions")
+		return false
+	}
+
 	if user.PermissionLevel >= security_level {
 		log.Println("Correct Permissions")
 		return true
@@ -149,20 +156,35 @@ func Get_User(auth_token, username string) User {
 	return user
 }
 
-// takes the current user's auth token and the username and new name of the user to be changed
-func Set_Name(auth_token string, username string, new_name string) int {
+func Verify_Request(auth_token, username string) (User, int) {
 	//Determines if user is editing themselves or someone else and sets permissions accordingly
 	var security_level int
 	user := Verify_User_Auth_Token(auth_token)
+
+	if user.PermissionLevel == -1 {
+		return user, -1
+	}
+
 	if user.Username == username || username == "" {
+		username = ""
 		security_level = edit_self
 	} else {
 		security_level = edit_users
 	}
 
+	return user, security_level
+}
+
+// takes the current user's auth token and the username and new name of the user to be changed
+func Set_Name(auth_token string, username string, new_name string) int {
+	user, security_level := Verify_Request(auth_token, username)
+	if security_level < 0 {
+		return Invalid_Data
+	}
+
 	//Applies change to user
 	if Verify_Permissions(auth_token, security_level) {
-		if security_level != 0 {
+		if username != "" {
 			user = retrieve_user_username(username)
 		}
 
@@ -175,30 +197,20 @@ func Set_Name(auth_token string, username string, new_name string) int {
 		}
 	}
 
-	// This could also mean that the authID is incorrect
 	return Incorrect_Permissions
 }
 
 // takes the current user's auth token and the old and new username of the user to be changed
 func Set_Username(auth_token string, username string, new_username string) int {
-	//Determines if user is editing themselves or someone else and sets permissions accordingly
-	var security_level int
-	user := Verify_User_Auth_Token(auth_token)
-	if user.Username == username || username == "" {
-		security_level = edit_self
-	} else {
-		security_level = edit_users
+	user, security_level := Verify_Request(auth_token, username)
+	if security_level < 0 {
+		return Invalid_Data
 	}
 
 	//Applies change to user
 	if Verify_Permissions(auth_token, security_level) {
-		if security_level != 0 {
+		if username != "" {
 			user = retrieve_user_username(username)
-		}
-
-		if user.Username == "" {
-			log.Println("Provided User does not exist")
-			return Invalid_Data
 		}
 
 		old_username := user.Username
@@ -213,30 +225,20 @@ func Set_Username(auth_token string, username string, new_username string) int {
 		}
 	}
 
-	// This could also mean that the authID is incorrect
 	return Incorrect_Permissions
 }
 
 // takes the current user's auth token and the username and new password of the user to be changed
 func Set_Password(auth_token string, username string, new_password string) int {
-	//Determines if user is editing themselves or someone else and sets permissions accordingly
-	var security_level int
-	user := Verify_User_Auth_Token(auth_token)
-	if user.Username == username || username == "" {
-		security_level = edit_self
-	} else {
-		security_level = edit_users
+	user, security_level := Verify_Request(auth_token, username)
+	if security_level < 0 {
+		return Invalid_Data
 	}
 
 	//Applies change to user
 	if Verify_Permissions(auth_token, security_level) {
-		if security_level != 0 {
+		if username != "" {
 			user = retrieve_user_username(username)
-		}
-
-		if user.Username == "" {
-			log.Println("Provided User does not exist")
-			return Invalid_Data
 		}
 
 		user.Password = new_password
@@ -247,7 +249,6 @@ func Set_Password(auth_token string, username string, new_password string) int {
 		}
 	}
 
-	// This could also mean that the authID is incorrect
 	return Incorrect_Permissions
 }
 
@@ -273,24 +274,15 @@ func Set_Permissions(auth_token string, username string, new_permission int) int
 
 // takes the current user's auth token and the username and new email of the user to be changed
 func Set_Email(auth_token string, username string, new_email string) int {
-	//Determines if user is editing themselves or someone else and sets permissions accordingly
-	var security_level int
-	user := Verify_User_Auth_Token(auth_token)
-	if user.Username == username || username == "" {
-		security_level = edit_self
-	} else {
-		security_level = edit_users
+	user, security_level := Verify_Request(auth_token, username)
+	if security_level < 0 {
+		return Invalid_Data
 	}
 
 	//Applies change to user
 	if Verify_Permissions(auth_token, security_level) {
-		if security_level != 0 {
+		if username != "" {
 			user = retrieve_user_username(username)
-		}
-
-		if user.Username == "" {
-			log.Println("Provided User does not exist")
-			return Invalid_Data
 		}
 
 		user.Email = new_email
@@ -304,14 +296,13 @@ func Set_Email(auth_token string, username string, new_email string) int {
 		}
 	}
 
-	// This could also mean that the authID is incorrect
 	return Incorrect_Permissions
 }
 
 func Modify_Points(auth_token string, points int) int {
 	//Validates token then adds points to user
 	user := Verify_User_Auth_Token(auth_token)
-	if user.Username != "" {
+	if user.PermissionLevel >= 0 {
 		user.Points += points
 
 		// Minimum number of points is 0
@@ -328,24 +319,15 @@ func Modify_Points(auth_token string, points int) int {
 
 // Randomizes the user auth token
 func Randomize_Auth_Token(auth_token, username string) int {
-	// Determines if user is editing themselves or someone else and sets permissions accordingly
-	var security_level int
-	user := Verify_User_Auth_Token(auth_token)
-	if user.Username == username || username == "" {
-		security_level = edit_self
-	} else {
-		security_level = edit_users
+	user, security_level := Verify_Request(auth_token, username)
+	if security_level < 0 {
+		return Invalid_Data
 	}
 
 	//Applies change to user
 	if Verify_Permissions(auth_token, security_level) {
-		if security_level != 0 {
+		if username != "" {
 			user = retrieve_user_username(username)
-		}
-
-		if user.Username == "" {
-			log.Println("Provided User does not exist")
-			return Invalid_Data
 		}
 
 		randomize_auth_token(user.AuthToken)
@@ -353,30 +335,20 @@ func Randomize_Auth_Token(auth_token, username string) int {
 		return Success
 	}
 
-	// This could also mean that the authID is incorrect
 	return Incorrect_Permissions
 }
 
 // Deletes a specified user
 func Delete_User(auth_token, username string) int {
-	//Determines if user is editing themselves or someone else and sets permissions accordingly
-	var security_level int
-	user := Verify_User_Auth_Token(auth_token)
-	if user.Username == username || username == "" {
-		security_level = edit_self
-	} else {
-		security_level = edit_users
+	user, security_level := Verify_Request(auth_token, username)
+	if security_level < 0 {
+		return Invalid_Data
 	}
 
 	//Applies change to user
 	if Verify_Permissions(auth_token, security_level) {
-		if security_level != 0 {
+		if username != "" {
 			user = retrieve_user_username(username)
-		}
-
-		if user.Username == "" {
-			log.Println("Provided User does not exist")
-			return Invalid_Data
 		}
 
 		delete_user(user.Username)
@@ -384,6 +356,5 @@ func Delete_User(auth_token, username string) int {
 		return Success
 	}
 
-	// This could also mean that the authID is incorrect
 	return Incorrect_Permissions
 }

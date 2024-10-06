@@ -41,7 +41,7 @@ func main() {
 	})
 
 	router.AddRoute(&r, router.Receiver{
-		Route:     "/reset_auth_token",
+		Route:     "/reset_auth_id",
 		RouteType: router.RoutePost,
 		Sender:    routes.Reset_Auth_Token,
 	})

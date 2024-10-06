@@ -1,4 +1,4 @@
-"authenticate" :
+"/authenticate" :
 
 	{
 		"authID" : "string: user auth id"
@@ -13,7 +13,7 @@
 		"email": "string: user email"
 	}
 
-"create_user" :
+"/create_user" :
 
 	{
 		"authID" : "string: admin users auth id",
@@ -26,7 +26,7 @@
 
 	{"result": int: results based off an enum posted in the documentation channel}
 
-"delete_user" :
+"/delete_user" :
 
 	{
 		"authID" : "string: admin users auth id",
@@ -35,7 +35,7 @@
 
 	{"result": int: results based off an enum posted in the documentation channel}
 
-"login" :
+"/login" :
 
 	{
 		"username" : "string: username of user",
@@ -44,7 +44,7 @@
 
 	{"authID": "string: the auth id of the user"}
 
-"modify points" :
+"/modify_points" :
 
 	{
 		"authID" : "string: admin users auth id",
@@ -57,7 +57,7 @@
 		"points": int: users points
 	}
 
-"reset auth id" :
+"/reset_auth_id" :
 
 	{
 		"authID" : "string: auth id",
@@ -83,7 +83,7 @@
 		int: results based off an enum posted in the documentation channel
 	]}
 
-"user list" :
+"/user_list" :
 
 	{
 		"authID" : "string: auth id of the user"
@@ -92,33 +92,10 @@
 
 	[ list of all the users
 		{
-			"name": "John Doe",
-			"username": "johndoe",
-			"points": 0
-		},
-		{
-			"name": "Jane Doe",
-			"username": "janedoe",
-			"points": 0
-		},
-		{
-			"name": "Grace",
-			"username": "grace67",
-			"points": 0
-		},
-		{
-			"name": "Alice",
-			"username": "alice31",
-			"points": 0
-		},
-		{
-			"name": "Charlie",
-			"username": "charlie78",
-			"points": 0
-		},
-		{
-			"name": "Jack",
-			"username": "jack68",
-			"points": 0
+			"name": "string: users name",
+			"username": "string: users username",
+			"email" : "string: ADMIN ONLY users email"
+			"permission_level": int: ADMIN ONLY users permission level
+			"points": int: user points
 		}
 	]

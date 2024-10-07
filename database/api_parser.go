@@ -156,7 +156,7 @@ func Get_User(auth_token, username string) User {
 	return user
 }
 
-func Verify_Request(auth_token, username string) (User, int) {
+func Verify_Request(auth_token, username string, user_permission, admin_permission int) (User, int) {
 	//Determines if user is editing themselves or someone else and sets permissions accordingly
 	var security_level int
 	user := Verify_User_Auth_Token(auth_token)
@@ -177,7 +177,7 @@ func Verify_Request(auth_token, username string) (User, int) {
 
 // takes the current user's auth token and the username and new name of the user to be changed
 func Set_Name(auth_token string, username string, new_name string) int {
-	user, security_level := Verify_Request(auth_token, username)
+	user, security_level := Verify_Request(auth_token, username, edit_self, edit_users)
 	if security_level < 0 {
 		return Invalid_Data
 	}
@@ -202,7 +202,7 @@ func Set_Name(auth_token string, username string, new_name string) int {
 
 // takes the current user's auth token and the old and new username of the user to be changed
 func Set_Username(auth_token string, username string, new_username string) int {
-	user, security_level := Verify_Request(auth_token, username)
+	user, security_level := Verify_Request(auth_token, username, edit_self, edit_users)
 	if security_level < 0 {
 		return Invalid_Data
 	}
@@ -230,7 +230,7 @@ func Set_Username(auth_token string, username string, new_username string) int {
 
 // takes the current user's auth token and the username and new password of the user to be changed
 func Set_Password(auth_token string, username string, new_password string) int {
-	user, security_level := Verify_Request(auth_token, username)
+	user, security_level := Verify_Request(auth_token, username, edit_self, edit_users)
 	if security_level < 0 {
 		return Invalid_Data
 	}
@@ -274,7 +274,7 @@ func Set_Permissions(auth_token string, username string, new_permission int) int
 
 // takes the current user's auth token and the username and new email of the user to be changed
 func Set_Email(auth_token string, username string, new_email string) int {
-	user, security_level := Verify_Request(auth_token, username)
+	user, security_level := Verify_Request(auth_token, username, edit_self, edit_users)
 	if security_level < 0 {
 		return Invalid_Data
 	}
@@ -319,7 +319,7 @@ func Modify_Points(auth_token string, points int) int {
 
 // Randomizes the user auth token
 func Randomize_Auth_Token(auth_token, username string) int {
-	user, security_level := Verify_Request(auth_token, username)
+	user, security_level := Verify_Request(auth_token, username, edit_self, edit_users)
 	if security_level < 0 {
 		return Invalid_Data
 	}
@@ -340,7 +340,7 @@ func Randomize_Auth_Token(auth_token, username string) int {
 
 // Deletes a specified user
 func Delete_User(auth_token, username string) int {
-	user, security_level := Verify_Request(auth_token, username)
+	user, security_level := Verify_Request(auth_token, username, delete_self, delete_users)
 	if security_level < 0 {
 		return Invalid_Data
 	}

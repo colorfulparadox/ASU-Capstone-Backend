@@ -346,10 +346,18 @@ func retrieve_user_list() []User {
 	defer log.Println("Conn Closed")
 
 	var userList []User
-	current_user := 1
+	var current_user int
 
-	for {
+	getIDsSQL := `SELECT id FROM users`
+	validIDs, err := conn.Query(context.Background(), getIDsSQL)
+	if err != nil {
+		log.Printf("Could not get user ID's\n")
+		log.Printf("Returned error was: %v\n", err)
+	}
+
+	for validIDs.Next() {
 		var user User
+		validIDs.Scan(&current_user)
 		// Prepare the SQL statement for selecting the user's data
 		selectUserSQL := `SELECT id, name, username, password, points, permission_level, email, auth_token, date_issued, date_expr
 			FROM users

@@ -66,7 +66,7 @@
 
 	{"result": int: results based off an enum posted in the documentation channel}
 
-"update user" : "only needed values in the request are authID and edit_user the rest is optional"
+"/update user" : "only needed values in the request are authID and edit_user the rest is optional"
 
 	{
 		"authID" : "string: auth id of the person editing the user",

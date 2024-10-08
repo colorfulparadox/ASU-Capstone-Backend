@@ -12,7 +12,6 @@ type SelectUser struct {
 }
 
 type ReturnUserData struct {
-	Verified        bool   `json:"verified"`
 	Name            string `json:"name"`
 	Username        string `json:"username"`
 	Points          int    `json:"points"`
@@ -36,14 +35,15 @@ func Authenticate(gc *gin.Context) {
 	user := database.Verify_User_Auth_Token(selectUser.AdminAuthID)
 
 	if user.Username != "" {
-		returnUserData.Verified = true
 		returnUserData.Name = user.Name
 		returnUserData.Username = user.Username
 		returnUserData.Points = user.Points
 		returnUserData.PermissionLevel = user.PermissionLevel
 		returnUserData.Email = user.Email
 	} else {
-		returnUserData.Verified = false
+		gc.Request.Header.Add("backend-error", "true")
+		gc.JSON(http.StatusForbidden, "{}")
+		return
 	}
 
 	// Returns userResult

@@ -34,7 +34,9 @@ func Login(gc *gin.Context) {
 	// Checks if user is valid
 	if auth_token == "" {
 		log.Println("username or password incorrect")
+		gc.Request.Header.Add("backend-error", "true")
 		gc.JSON(http.StatusForbidden, "{}")
+		return
 	}
 
 	// Puts auth_token into JSON object

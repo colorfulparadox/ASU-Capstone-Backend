@@ -30,12 +30,15 @@ func Create_User(gc *gin.Context) {
 	// Gets the enum int relating to results (can be found in api_parser starting at line 23)
 	user_creation_success := database.New_User(createUserData.AdminAuthID, createUserData.Name, createUserData.Username, createUserData.Password, createUserData.PermissionLevel, createUserData.Email)
 
-	// Checks if there was an error
-	UserResults(user_creation_success)
-
 	// Puts int into JSON object
 	userResult := UserResult{
 		Result: user_creation_success,
+	}
+
+	// Checks if there was an error
+	if !UserResults(userResult.Result) {
+		gc.Request.Header.Add("backend-error", "true")
+		gc.JSON(http.StatusForbidden, userResult)
 	}
 
 	// Returns userResult

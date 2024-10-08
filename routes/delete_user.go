@@ -42,7 +42,11 @@ func Delete_User(gc *gin.Context) {
 		Result: user_creation_success,
 	}
 
-	UserResults(userResult.Result)
+	if !UserResults(userResult.Result) {
+		gc.Request.Header.Add("backend-error", "true")
+		gc.JSON(http.StatusForbidden, userResult)
+		return
+	}
 
 	// Returns userResult
 	gc.JSON(http.StatusOK, userResult)

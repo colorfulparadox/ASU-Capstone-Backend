@@ -21,8 +21,7 @@ type SelectPoints struct {
 }
 
 type TotalPoints struct {
-	Verified bool `json:"verified"`
-	Points   int  `json:"points"`
+	Points int `json:"points"`
 }
 
 // Creates users
@@ -41,9 +40,10 @@ func ModifyPoints(gc *gin.Context) {
 	points := database.Modify_Points(selectPoints.AdminAuthID, selectPoints.Points)
 
 	if points < 0 {
-		totalPoints.Verified = false
+		gc.Request.Header.Add("backend-error", "true")
+		gc.JSON(http.StatusForbidden, "{}")
+		return
 	} else {
-		totalPoints.Verified = true
 		totalPoints.Points = points
 	}
 

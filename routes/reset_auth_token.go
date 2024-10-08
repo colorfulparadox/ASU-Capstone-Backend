@@ -32,7 +32,11 @@ func Reset_Auth_Token(gc *gin.Context) {
 	}
 
 	// Checks if there was an error
-	UserResults(user_creation_success)
+	if !UserResults(user_creation_success) {
+		gc.Request.Header.Add("backend-error", "true")
+		gc.JSON(http.StatusForbidden, userResult)
+		return
+	}
 
 	// Returns userResult
 	gc.JSON(http.StatusOK, userResult)

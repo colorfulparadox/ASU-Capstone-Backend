@@ -38,32 +38,35 @@ func Update_User(gc *gin.Context) {
 	// Gets the enum int relating to results (can be found in api_parser starting at line 23)
 	if updatedData.Name != "" {
 		user_update_success = append(user_update_success, database.Set_Name(updatedData.UserAuthID, updatedData.Edit_User, updatedData.Name))
-		UserResults(user_update_success[len(user_update_success)-1])
 	}
 
 	if updatedData.Username != "" {
 		user_update_success = append(user_update_success, database.Set_Username(updatedData.UserAuthID, updatedData.Edit_User, updatedData.Username))
-		UserResults(user_update_success[len(user_update_success)-1])
 	}
 
 	if updatedData.Password != "" {
 		user_update_success = append(user_update_success, database.Set_Password(updatedData.UserAuthID, updatedData.Edit_User, updatedData.Password))
-		UserResults(user_update_success[len(user_update_success)-1])
 	}
 
 	if updatedData.PermissionLevel >= 0 {
 		user_update_success = append(user_update_success, database.Set_Permissions(updatedData.UserAuthID, updatedData.Edit_User, updatedData.PermissionLevel))
-		UserResults(user_update_success[len(user_update_success)-1])
 	}
 
 	if updatedData.Email != "" {
 		user_update_success = append(user_update_success, database.Set_Email(updatedData.UserAuthID, updatedData.Edit_User, updatedData.Email))
-		UserResults(user_update_success[len(user_update_success)-1])
 	}
 
 	// Puts int into JSON object
 	updateResult := UpdateResult{
 		Result: user_update_success,
+	}
+
+	for i := 0; i < len(updateResult.Result); i++ {
+		if !UserResults(updateResult.Result[i]) {
+			gc.Request.Header.Add("backend-error", "true")
+			gc.JSON(http.StatusForbidden, updateResult)
+			return
+		}
 	}
 
 	// Returns userResult

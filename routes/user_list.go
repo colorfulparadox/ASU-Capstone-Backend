@@ -50,11 +50,15 @@ func UserList(gc *gin.Context) {
 			userElement.Permissions, err = strconv.Atoi(users[i][3])
 			if err != nil {
 				log.Println("Incorrect data from API parser:", err)
+				gc.Request.Header.Add("backend-error", "true")
+				gc.JSON(http.StatusForbidden, "{}")
 				return
 			}
 			userElement.Points, err = strconv.Atoi(users[i][4])
 			if err != nil {
 				log.Println("Incorrect data from API parser:", err)
+				gc.Request.Header.Add("backend-error", "true")
+				gc.JSON(http.StatusForbidden, "{}")
 				return
 			}
 			userList = append(userList, userElement)
@@ -68,6 +72,8 @@ func UserList(gc *gin.Context) {
 			userElement.Points, err = strconv.Atoi(users[i][2])
 			if err != nil {
 				log.Println("Incorrect data from API parser:", err)
+				gc.Request.Header.Add("backend-error", "true")
+				gc.JSON(http.StatusForbidden, "{}")
 				return
 			}
 

@@ -1,7 +1,9 @@
 first install google cloud cli
+then run this to add the google cloud server to docker
+gcloud auth configure-docker us-central1-docker.pkg.dev
 
 commands to push docker image to google cloud
 
 docker build <IMAGE NAME> .
-docker tag backend us-west2-docker.pkg.dev/project-persona-436923/backend/backend
-docker push us-west2-docker.pkg.dev/project-persona-436923/backend/backend
+docker tag backend us-central1-docker.pkg.dev/project-persona-436923/<FOLDER NAME>/<IMAGE NAME>
+docker push us-central1-docker.pkg.dev/project-persona-436923/<FOLDER NAME>/<IMAGE NAME>

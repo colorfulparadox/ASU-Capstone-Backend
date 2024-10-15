@@ -118,7 +118,6 @@ func New_User(auth_token, name, username, password string, permission_level int,
 			Name:            name,
 			Username:        username,
 			Password:        password,
-			Points:          0,
 			PermissionLevel: permission_level,
 			Email:           email,
 		}
@@ -299,22 +298,40 @@ func Set_Email(auth_token string, username string, new_email string) int {
 	return Incorrect_Permissions
 }
 
-func Modify_Points(auth_token string, points int) int {
+func Modify_Points(auth_token string, sentiment_points, sales_points, knowledge_points int) int {
 	//Validates token then adds points to user
 	user := Verify_User_Auth_Token(auth_token)
-	if user.PermissionLevel >= 0 {
-		user.Points += points
+	if Verify_Permissions(auth_token, edit_self) {
+
+		user.Sentiment_Points += sentiment_points
 
 		// Minimum number of points is 0
-		if user.Points < 0 {
-			user.Points = 0
+		if user.Sentiment_Points < 0 {
+			user.Sentiment_Points = 0
 		}
 
-		return user.Points
+		user.Sales_Points += sales_points
+
+		// Minimum number of points is 0
+		if user.Sales_Points < 0 {
+			user.Sales_Points = 0
+		}
+
+		user.Knowledge_Points += knowledge_points
+
+		// Minimum number of points is 0
+		if user.Knowledge_Points < 0 {
+			user.Knowledge_Points = 0
+		}
+
+		if update_user(user.Username, user) {
+			return Success
+		} else {
+			return Invalid_Data
+		}
 	}
 
-	// Returns -1 if auth_token is invalid
-	return -1
+	return Incorrect_Permissions
 }
 
 // Randomizes the user auth token

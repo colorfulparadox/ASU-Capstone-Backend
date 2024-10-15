@@ -5,7 +5,6 @@
 	}
 
 	{
-		"verified": bool: whether the request was succesful,
 		"name": "string: users name",
 		"username": "string: users username",
 		"points": int: number of points,

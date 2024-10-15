@@ -6,6 +6,11 @@ import (
 	"BackEnd/routes"
 )
 
+const (
+	Temp_Images = "/temp"
+	Thumbnails  = "/thumbnails"
+)
+
 // https://pkg.go.dev/github.com/gin-gonic/gin#section-readme
 // https://go.dev/doc/tutorial/web-service-gin
 

@@ -4,7 +4,11 @@
 package database
 
 import (
+	"image"
+	"image/draw"
+	_ "image/jpeg"
 	"log"
+	"os"
 	"strconv"
 	"time"
 )
@@ -118,7 +122,6 @@ func New_User(auth_token, name, username, password string, permission_level int,
 			Name:            name,
 			Username:        username,
 			Password:        password,
-			Points:          0,
 			PermissionLevel: permission_level,
 			Email:           email,
 		}
@@ -173,6 +176,66 @@ func Verify_Request(auth_token, username string, user_permission, admin_permissi
 	}
 
 	return user, security_level
+}
+
+// takes the current user's auth token and the old and new username of the user to be changed
+func Set_Pfp(auth_token string, username, image_name string) int {
+	user, security_level := Verify_Request(auth_token, username, edit_self, edit_users)
+	if security_level < 0 {
+		return Invalid_Data
+	}
+
+	// Open the original image file
+	srcFile, err := os.Open(os.TempDir() + image_name)
+	if err != nil {
+		panic(err)
+	}
+	defer srcFile.Close()
+
+	// Decode the source image
+	srcImage, _, err := image.Decode(srcFile)
+	if err != nil {
+		panic(err)
+	}
+
+	if srcImage.Bounds().Max.X < srcImage.Bounds().Max.Y {
+		cropSize := image.Rect(0, 0, width/2+100, width/2+100)
+		cropSize = cropSize.Add(image.Point{100, 80})
+		croppedImage := srcImage.(SubImager).SubImage(cropSize)
+	}
+
+	// Create a new blank image with dimensions 120x120 pixels
+	dstImage := image.NewNRGBA(image.Rect(0, 0, 120, 120))
+
+	// Draw the source image onto the destination image, resizing it to fit
+	draw.Draw(dstImage, dstImage.Bounds(), srcImage, srcImage.Bounds(), draw.Over)
+
+	// Create a new output file for the thumbnail
+	dstFile, err := os.Create("thumbnail.jpg")
+	if err != nil {
+		panic(err)
+	}
+	defer dstFile.Close()
+
+	//Applies change to user
+	if Verify_Permissions(auth_token, security_level) {
+		if username != "" {
+			user = retrieve_user_username(username)
+		}
+
+		old_username := user.Username
+		user.Profile_Picture = new_username
+		user.Password = ""
+
+		if update_user(old_username, user) {
+			log.Println("User Username Updated")
+			return Success
+		} else {
+			return Data_Already_Exists
+		}
+	}
+
+	return Incorrect_Permissions
 }
 
 // takes the current user's auth token and the username and new name of the user to be changed
@@ -299,22 +362,40 @@ func Set_Email(auth_token string, username string, new_email string) int {
 	return Incorrect_Permissions
 }
 
-func Modify_Points(auth_token string, points int) int {
+func Modify_Points(auth_token string, sentiment_points, sales_points, knowledge_points int) int {
 	//Validates token then adds points to user
 	user := Verify_User_Auth_Token(auth_token)
-	if user.PermissionLevel >= 0 {
-		user.Points += points
+	if Verify_Permissions(auth_token, edit_self) {
+
+		user.Sentiment_Points += sentiment_points
 
 		// Minimum number of points is 0
-		if user.Points < 0 {
-			user.Points = 0
+		if user.Sentiment_Points < 0 {
+			user.Sentiment_Points = 0
 		}
 
-		return user.Points
+		user.Sales_Points += sales_points
+
+		// Minimum number of points is 0
+		if user.Sales_Points < 0 {
+			user.Sales_Points = 0
+		}
+
+		user.Knowledge_Points += knowledge_points
+
+		// Minimum number of points is 0
+		if user.Knowledge_Points < 0 {
+			user.Knowledge_Points = 0
+		}
+
+		if update_user(user.Username, user) {
+			return Success
+		} else {
+			return Invalid_Data
+		}
 	}
 
-	// Returns -1 if auth_token is invalid
-	return -1
+	return Incorrect_Permissions
 }
 
 // Randomizes the user auth token

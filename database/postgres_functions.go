@@ -11,27 +11,53 @@ import (
 
 // User struct for holding users while working on them
 type User struct {
-	UserID          int       `json:"id"`
-	Name            string    `json:"name"`
-	Username        string    `json:"username"`
-	Password        string    `json:"password"`
-	PasswordHash    string    `json:"password_hash"`
-	Points          int       `json:"points"`
-	PermissionLevel int       `json:"permission_level"`
-	Email           string    `json:"email"`
-	AuthToken       string    `json:"auth_token"`
-	DateIssued      time.Time `json:"date_issued"`
-	DateExpr        time.Time `json:"date_expr"`
+	UserID           int       `json:"id"`
+	Profile_Picture  string    `json:"profile_picture"`
+	Name             string    `json:"name"`
+	Username         string    `json:"username"`
+	Password         string    `json:"password"`
+	PasswordHash     string    `json:"password_hash"`
+	Sentiment_Points int       `json:"sentiment_points"`
+	Sales_Points     int       `json:"sales_points"`
+	Knowledge_Points int       `json:"knowledge_points"`
+	PermissionLevel  int       `json:"permission_level"`
+	Email            string    `json:"email"`
+	AuthToken        string    `json:"auth_token"`
+	DateIssued       time.Time `json:"date_issued"`
+	DateExpr         time.Time `json:"date_expr"`
 }
 
 // The table layout for users inside postgres
 const usersTableSQL = `
 CREATE TABLE IF NOT EXISTS users (
     id SERIAL PRIMARY KEY,
+    profile_picture BYTEA,
     name VARCHAR(255) NOT NULL,
     username VARCHAR(255) UNIQUE NOT NULL,
     password VARCHAR(255) NOT NULL,
     password_hash VARCHAR(255) NOT NULL,
+    sentiment_points INT NOT NULL DEFAULT 0,
+    sales_points INT NOT NULL DEFAULT 0,
+    knowledge_points INT NOT NULL DEFAULT 0,
+    permission_level INT NOT NULL DEFAULT 0,
+    email VARCHAR(255) UNIQUE NOT NULL,
+    auth_token TEXT UNIQUE NOT NULL,
+    date_issued TIMESTAMP NOT NULL,
+    date_expr TIMESTAMP NOT NULL
+);`
+
+const aiTableSQL = `
+CREATE TABLE IF NOT EXISTS users (
+    id SERIAL PRIMARY KEY,
+    name VARCHAR(255) NOT NULL,
+	model_name VARCHAR(255) NOT NULL,
+	last_edit TIMESTAMP NOT NULL
+);`
+
+const personalityTableSQL = `
+CREATE TABLE IF NOT EXISTS users (
+    id SERIAL PRIMARY KEY,
+    name VARCHAR(255) NOT NULL,
     points INT NOT NULL DEFAULT 0,
     permission_level INT NOT NULL DEFAULT 0,
     email VARCHAR(255) UNIQUE NOT NULL,
@@ -85,7 +111,6 @@ func create_users_table() {
 		Name:            "John Doe",
 		Username:        "johndoe",
 		Password:        "securepassword",
-		Points:          0,
 		PermissionLevel: 1,
 		Email:           "john.doe@example.com",
 	}
@@ -118,12 +143,12 @@ func create_user(user User) bool {
 	user.AuthToken = GenerateUUID()
 	var userID int
 	// Prepare the SQL statement
-	insertSQL := `INSERT INTO users (name, username, password, password_hash, points, permission_level, email, auth_token, date_issued, date_expr)
-    	VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10) RETURNING id;`
+	insertSQL := `INSERT INTO users (name, username, password, password_hash, permission_level, email, auth_token, date_issued, date_expr)
+    	VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9) RETURNING id;`
 
 	// Execute the SQL statement using a prepared statement
 	err = conn.QueryRow(context.Background(), insertSQL,
-		user.Name, user.Username, user.Password, HashPassword(user.Password), user.Points, user.PermissionLevel, user.Email, user.AuthToken, time.Now(), time.Now().AddDate(0, 0, 0)).Scan(&userID)
+		user.Name, user.Username, user.Password, HashPassword(user.Password), user.PermissionLevel, user.Email, user.AuthToken, time.Now(), time.Now().AddDate(0, 0, 0)).Scan(&userID)
 	if err != nil {
 		log.Fatalf("Failed to insert data: %v\n", err)
 	}
@@ -167,22 +192,22 @@ func update_user(username string, user User) bool {
 
 	if user.Password == "" {
 		// Prepare the SQL statement for updating the user's name
-		updateUserSQL := `UPDATE users SET name = $1, username = $2, points = $3, permission_level = $4, email = $5
-			WHERE username = $6;`
+		updateUserSQL := `UPDATE users SET name = $1, username = $2, sentiment_points = $3, sales_points = $4, knowledge_points = $5, permission_level = $6, email = $7
+			WHERE username = $8;`
 
 		// Execute the SQL statement using a prepared statement
-		_, err = conn.Exec(context.Background(), updateUserSQL, user.Name, user.Username, user.Points, user.PermissionLevel, user.Email, username)
+		_, err = conn.Exec(context.Background(), updateUserSQL, user.Name, user.Username, user.Sentiment_Points, user.Sales_Points, user.Knowledge_Points, user.PermissionLevel, user.Email, username)
 		if err != nil {
 			log.Fatalf("Failed to update user's info: %v\n", err)
 			return false
 		}
 	} else {
 		// Prepare the SQL statement for updating the user's name
-		updateUserSQL := `UPDATE users SET name = $1, username = $2, password = $3, password_hash = $4, points = $5, permission_level = $6, email = $7
-			WHERE username = $8;`
+		updateUserSQL := `UPDATE users SET name = $1, username = $2, password = $3, password_hash = $4, sentiment_points = $5, sales_points = $6, knowledge_points = $7, permission_level = $8, email = $9
+			WHERE username = $10;`
 
 		// Execute the SQL statement using a prepared statement
-		_, err = conn.Exec(context.Background(), updateUserSQL, user.Name, user.Username, user.Password, HashPassword(user.Password), user.Points, user.PermissionLevel, user.Email, username)
+		_, err = conn.Exec(context.Background(), updateUserSQL, user.Name, user.Username, user.Password, HashPassword(user.Password), user.Sentiment_Points, user.Sales_Points, user.Knowledge_Points, user.PermissionLevel, user.Email, username)
 		if err != nil {
 			log.Fatalf("Failed to update user's info: %v\n", err)
 			return false
@@ -230,7 +255,7 @@ func retrieve_user_username(username string) (user User) {
 	defer log.Println("Conn Closed")
 
 	// Prepare the SQL statement for selecting the user's data
-	selectUserSQL := `SELECT id, name, username, password, password_hash, points, permission_level, email, auth_token, date_issued, date_expr
+	selectUserSQL := `SELECT id, name, username, password, password_hash, sentiment_points, sales_points, knowledge_points, permission_level, email, auth_token, date_issued, date_expr
     	FROM users
     	WHERE username = $1;`
 
@@ -240,7 +265,9 @@ func retrieve_user_username(username string) (user User) {
 		&user.Username,
 		&user.Password,
 		&user.PasswordHash,
-		&user.Points,
+		&user.Sentiment_Points,
+		&user.Sales_Points,
+		&user.Knowledge_Points,
 		&user.PermissionLevel,
 		&user.Email,
 		&user.AuthToken,
@@ -262,7 +289,7 @@ func retrieve_user_auth_token(auth_token string) (user User) {
 	defer log.Println("Conn Closed")
 
 	// Prepare the SQL statement for selecting the user's data
-	selectUserSQL := `SELECT id, name, username, password, points, permission_level, email, auth_token, date_issued, date_expr
+	selectUserSQL := `SELECT id, name, username, password, sentiment_points, sales_points, knowledge_points, permission_level, email, auth_token, date_issued, date_expr
     	FROM users
     	WHERE auth_token = $1;`
 
@@ -271,7 +298,9 @@ func retrieve_user_auth_token(auth_token string) (user User) {
 		&user.Name,
 		&user.Username,
 		&user.Password,
-		&user.Points,
+		&user.Sentiment_Points,
+		&user.Sales_Points,
+		&user.Knowledge_Points,
 		&user.PermissionLevel,
 		&user.Email,
 		&user.AuthToken,
@@ -291,7 +320,7 @@ func retrieve_user_auth_token(auth_token string) (user User) {
 func retrieve_user_pass_conn(conn *pgxpool.Pool, username, email string) (username_user, email_user User) {
 	// Prepare the SQL statement for selecting the user's data
 
-	selectUserSQL := `SELECT id, name, username, password, points, permission_level, email, auth_token, date_issued, date_expr
+	selectUserSQL := `SELECT id, name, username, password, sentiment_points, sales_points, knowledge_points, permission_level, email, auth_token, date_issued, date_expr
     	FROM users
     	WHERE username = $1;`
 
@@ -300,7 +329,9 @@ func retrieve_user_pass_conn(conn *pgxpool.Pool, username, email string) (userna
 		&username_user.Name,
 		&username_user.Username,
 		&username_user.Password,
-		&username_user.Points,
+		&username_user.Sentiment_Points,
+		&username_user.Sales_Points,
+		&username_user.Knowledge_Points,
 		&username_user.PermissionLevel,
 		&username_user.Email,
 		&username_user.AuthToken,
@@ -313,7 +344,7 @@ func retrieve_user_pass_conn(conn *pgxpool.Pool, username, email string) (userna
 
 	if email != "" {
 
-		selectUserSQL = `SELECT id, name, username, password, points, permission_level, email, auth_token, date_issued, date_expr
+		selectUserSQL = `SELECT id, name, username, password, sentiment_points, sales_points, knowledge_points, permission_level, email, auth_token, date_issued, date_expr
     		FROM users
     		WHERE email = $1;`
 
@@ -322,7 +353,9 @@ func retrieve_user_pass_conn(conn *pgxpool.Pool, username, email string) (userna
 			&email_user.Name,
 			&email_user.Username,
 			&email_user.Password,
-			&email_user.Points,
+			&email_user.Sentiment_Points,
+			&email_user.Sales_Points,
+			&email_user.Knowledge_Points,
 			&email_user.PermissionLevel,
 			&email_user.Email,
 			&email_user.AuthToken,
@@ -359,7 +392,7 @@ func retrieve_user_list() []User {
 		var user User
 		validIDs.Scan(&current_user)
 		// Prepare the SQL statement for selecting the user's data
-		selectUserSQL := `SELECT id, name, username, password, points, permission_level, email, auth_token, date_issued, date_expr
+		selectUserSQL := `SELECT id, name, username, password, sentiment_points, sales_points, knowledge_points, permission_level, email, auth_token, date_issued, date_expr
 			FROM users
 			WHERE id = $1;`
 
@@ -368,7 +401,9 @@ func retrieve_user_list() []User {
 			&user.Name,
 			&user.Username,
 			&user.Password,
-			&user.Points,
+			&user.Sentiment_Points,
+			&user.Sales_Points,
+			&user.Knowledge_Points,
 			&user.PermissionLevel,
 			&user.Email,
 			&user.AuthToken,

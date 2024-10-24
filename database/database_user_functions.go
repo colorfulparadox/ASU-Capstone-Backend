@@ -3,7 +3,6 @@ package database
 import (
 	"context"
 	"log"
-	"os"
 	"time"
 
 	"github.com/jackc/pgx/v5/pgxpool"
@@ -12,7 +11,6 @@ import (
 // User struct for holding users while working on them
 type User struct {
 	UserID           int       `json:"id"`
-	Profile_Picture  string    `json:"profile_picture"`
 	Name             string    `json:"name"`
 	Username         string    `json:"username"`
 	Password         string    `json:"password"`
@@ -31,7 +29,6 @@ type User struct {
 const usersTableSQL = `
 CREATE TABLE IF NOT EXISTS users (
     id SERIAL PRIMARY KEY,
-    profile_picture BYTEA,
     name VARCHAR(255) NOT NULL,
     username VARCHAR(255) UNIQUE NOT NULL,
     password VARCHAR(255) NOT NULL,
@@ -45,53 +42,6 @@ CREATE TABLE IF NOT EXISTS users (
     date_issued TIMESTAMP NOT NULL,
     date_expr TIMESTAMP NOT NULL
 );`
-
-const aiTableSQL = `
-CREATE TABLE IF NOT EXISTS users (
-    id SERIAL PRIMARY KEY,
-    name VARCHAR(255) NOT NULL,
-	model_name VARCHAR(255) NOT NULL,
-	last_edit TIMESTAMP NOT NULL
-);`
-
-const personalityTableSQL = `
-CREATE TABLE IF NOT EXISTS users (
-    id SERIAL PRIMARY KEY,
-    name VARCHAR(255) NOT NULL,
-    points INT NOT NULL DEFAULT 0,
-    permission_level INT NOT NULL DEFAULT 0,
-    email VARCHAR(255) UNIQUE NOT NULL,
-    auth_token TEXT UNIQUE NOT NULL,
-    date_issued TIMESTAMP NOT NULL,
-    date_expr TIMESTAMP NOT NULL
-);`
-
-//Function for setting up connection ==============================================================
-
-func establish_connection() (conn *pgxpool.Pool) {
-	// Set up connection to the PostgreSQL server
-	var err error
-
-	var dsn string
-
-	if os.Getenv("MODE") == "release" {
-		host := "/cloudsql/" + os.Getenv("CLOUD_SQL_CONNECTION_NAME")
-		user := os.Getenv("DB_USER")
-		password := os.Getenv("DB_PASS")
-		dbname := os.Getenv("DB_NAME")
-		dsn = "host=" + host + " user=" + user + " password=" + password + " dbname=" + dbname + " sslmode=disable"
-	} else {
-		dsn = "host=postgres.blusnake.net port=35432 user=project-persona password=jZFnGNY7yc6QYb2H dbname=project-persona sslmode=disable"
-	}
-	conn, err = pgxpool.New(context.Background(), dsn)
-	if err != nil {
-		log.Fatalf("INTERNAL: Unable to connect to database: %v\n", err)
-	}
-
-	log.Println("Conn Opened")
-
-	return
-}
 
 //Function for creating tables ====================================================================
 
@@ -411,13 +361,11 @@ func retrieve_user_list() []User {
 			&user.DateExpr,
 		)
 		if err != nil {
-			log.Printf("Finished retrieving all: %d users\n", current_user-1)
-			log.Printf("Returned error was: %v\n", err)
+			log.Printf("An Error occured retrieving user data: %v\n", err)
 			break
 		} else {
 			log.Printf("Retrieved user: %s\n", user.Username)
 			userList = append(userList, user)
-			current_user++
 			continue
 		}
 	}

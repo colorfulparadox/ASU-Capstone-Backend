@@ -15,24 +15,16 @@ const (
 	get_users           = 1
 	get_user_list       = 0
 	get_admin_user_list = 1
+	get_persona         = 0
+	edit_persona        = 1
+	get_ai              = 0
+	edit_ai             = 1
 	edit_self           = 0
 	edit_users          = 1
 	edit_permissions    = 1
 	delete_self         = 0
 	delete_users        = 1
 )
-
-// An enum to show the result of a transaction
-const (
-	Success = iota
-	Data_Already_Exists
-	Incorrect_Permissions
-	Invalid_Data
-)
-
-func Create_Tables() {
-	create_users_table()
-}
 
 // Verifies a login attempt with the username and password
 func Verify_User_Login(username string, password string) string {
@@ -57,6 +49,7 @@ func Verify_User_Auth_Token(auth_token string) User {
 			log.Printf("Passing Current User to Function\n")
 			return user
 		}
+		End_All_Persona_Conversations(auth_token)
 		randomize_auth_token(auth_token)
 		log.Println("Auth Token reset")
 	}

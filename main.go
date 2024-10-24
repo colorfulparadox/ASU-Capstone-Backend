@@ -4,13 +4,20 @@ import (
 	"BackEnd/database"
 	"BackEnd/router"
 	"BackEnd/routes"
+	"log"
+
+	"github.com/joho/godotenv"
 )
 
 // https://pkg.go.dev/github.com/gin-gonic/gin#section-readme
 // https://go.dev/doc/tutorial/web-service-gin
 
 func main() {
+	godotenv.Load()
+
 	database.Create_Tables()
+
+	log.Println(database.Continue_Persona_Conversation("auth_id", "What are the total number of messages in this conversation", "conversation_id"))
 
 	r := router.NewRouter(":4040")
 

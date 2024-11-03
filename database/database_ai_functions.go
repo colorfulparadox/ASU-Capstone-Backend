@@ -167,6 +167,10 @@ func retrieve_ai_pass_conn(conn *pgxpool.Pool, name string) (ai AI, err error) {
 }
 
 func create_menu_file(menu_data, menu_name, path string) (string, error) {
+	if _, err := os.Stat(filepath.Join(path, menu_name+".json")); err == nil {
+		return "", errors.New("that ai already has a file")
+	}
+
 	file, err := os.OpenFile(filepath.Join(path, menu_name+".json"), os.O_WRONLY|os.O_CREATE, os.ModePerm)
 	if err != nil {
 		log.Println("Menu file not created: ", err)

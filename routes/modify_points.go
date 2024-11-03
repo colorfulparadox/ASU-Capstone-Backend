@@ -28,7 +28,7 @@ type CurrentPoints struct {
 }
 
 // Creates users
-func ModifyPoints(gc *gin.Context) {
+func Modify_Points(gc *gin.Context) {
 	var addPoints AddPoints
 	var currentPoints CurrentPoints
 

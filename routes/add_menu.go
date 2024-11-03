@@ -13,7 +13,7 @@ type New_Menu struct {
 }
 
 // Creates users
-func AddMenu(gc *gin.Context) {
+func Add_Menu(gc *gin.Context) {
 	var new_menu New_Menu
 
 	// Parses JSON received from client

@@ -28,7 +28,7 @@ type UserElement struct {
 type UserElementList []UserElement
 
 // Creates users
-func UserList(gc *gin.Context) {
+func User_List(gc *gin.Context) {
 	var specifyUser SpecifyUser
 	var userElement UserElement
 	var userList UserElementList

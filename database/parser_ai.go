@@ -17,16 +17,6 @@ func New_AI(name string) error {
 
 }
 
-func Add_Menu_Test(ai_name, menu_data string) string {
-	menu_name, err := create_menu_file(menu_data, ai_name+"_menu", Menu_Path)
-	if err != nil {
-		log.Println(err)
-		return "error"
-	}
-
-	return menu_name
-}
-
 func Add_Menu(ai_name, menu_data string) error {
 	menu_name, err := create_menu_file(menu_data, ai_name+"_menu", Menu_Path)
 	if err != nil {

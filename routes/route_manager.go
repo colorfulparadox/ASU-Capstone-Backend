@@ -44,13 +44,13 @@ func User_Routes(r router.Router) {
 	router.AddRoute(&r, router.Receiver{
 		Route:     "/modify_points",
 		RouteType: router.RoutePost,
-		Sender:    ModifyPoints,
+		Sender:    Modify_Points,
 	})
 
 	router.AddRoute(&r, router.Receiver{
 		Route:     "/user_list",
 		RouteType: router.RoutePost,
-		Sender:    UserList,
+		Sender:    User_List,
 	})
 }
 
@@ -58,7 +58,7 @@ func AI_Routes(r router.Router) {
 	router.AddRoute(&r, router.Receiver{
 		Route:     "/add_menu",
 		RouteType: router.RoutePost,
-		Sender:    AddMenu,
+		Sender:    Add_Menu,
 	})
 }
 
@@ -66,18 +66,18 @@ func Persona_Routes(r router.Router) {
 	router.AddRoute(&r, router.Receiver{
 		Route:     "/start_conversation",
 		RouteType: router.RoutePost,
-		Sender:    StartConversation,
+		Sender:    Start_Conversation,
 	})
 
 	router.AddRoute(&r, router.Receiver{
 		Route:     "/continue_conversation",
 		RouteType: router.RoutePost,
-		Sender:    ContinueConversation,
+		Sender:    Continue_Conversation,
 	})
 
 	router.AddRoute(&r, router.Receiver{
 		Route:     "/end_conversation",
 		RouteType: router.RoutePost,
-		Sender:    EndConversation,
+		Sender:    End_Conversation,
 	})
 }

@@ -404,7 +404,11 @@ func randomize_auth_token(auth_token string) error {
 		WHERE auth_token = $4;`
 
 	dateIssued := time.Now().UTC()
-	expires := time.Now().AddDate(0, 0, 7).UTC()
+
+	local_hour := time.Now().Hour()
+	hour_offset := 23 - local_hour
+
+	expires := time.Now().Add(time.Hour*time.Duration(hour_offset)).AddDate(0, 0, 7).UTC()
 
 	token := GenerateUUID()
 

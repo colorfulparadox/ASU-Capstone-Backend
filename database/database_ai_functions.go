@@ -174,8 +174,11 @@ func create_menu_file(menu_data, menu_name, path string) (string, error) {
 	}
 	defer file.Close()
 
+	var jsonMap map[string]interface{}
+	json.Unmarshal([]byte(menu_data), &jsonMap)
+
 	encoder := json.NewEncoder(file)
-	err = encoder.Encode(menu_data)
+	err = encoder.Encode(jsonMap)
 	if err != nil {
 		log.Println("Data not encoded into file: ", err)
 		err = os.Remove(filepath.Join(path, menu_name+".json"))

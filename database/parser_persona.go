@@ -27,7 +27,7 @@ func New_Persona(persona_name, ai_name, description, instructions string) error 
 	return create_persona(persona)
 }
 
-func Conversation_Test(authID, conversation_id string) string {
+func Start_Test(authID, conversation_id string) string {
 	var conversation Conversation
 	conversation.ConversationID = conversation_id
 	conversation.AssistantID = "assistant id"
@@ -35,6 +35,35 @@ func Conversation_Test(authID, conversation_id string) string {
 	conversation.RunID = "run id"
 
 	err := create_conversation(authID, conversation)
+
+	return err.Error()
+}
+
+func Continue_Test(authID, conversation_id string) string {
+	log.Println("get conversation")
+	conversation, err := get_conversation(authID, conversation_id)
+	if err != nil {
+		log.Println(err)
+	}
+
+	log.Println(conversation)
+
+	conversation.RunID = "new run id"
+
+	log.Println("update conversation")
+	err = update_conversation_run_id(authID, conversation)
+
+	return err.Error()
+}
+
+func End_Test(authID, conversation_id string) string {
+	err := delete_conversation(authID, conversation_id)
+
+	return err.Error()
+}
+
+func End_All_Test(authID string) string {
+	err := delete_conversation_file(authID)
 
 	return err.Error()
 }

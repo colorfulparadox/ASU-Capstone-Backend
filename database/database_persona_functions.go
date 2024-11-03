@@ -236,7 +236,7 @@ func get_last_message(conversation Conversation) (string, error) {
 func get_conversation(authID, conversation_id string) (Conversation, error) {
 	file, err := os.OpenFile(filepath.Join(Conversation_Path, authID+".json"), os.O_RDONLY, os.ModePerm)
 	if err != nil {
-		log.Println("Temp file not created/found: ", err)
+		log.Println("Temp file not found: ", err)
 		return Conversation{}, err
 	}
 	defer file.Close()
@@ -259,15 +259,26 @@ func get_conversation(authID, conversation_id string) (Conversation, error) {
 }
 
 func create_conversation(authID string, conversation Conversation) error {
-	file, err := os.OpenFile(filepath.Join(Conversation_Path, authID+".json"), os.O_WRONLY|os.O_APPEND|os.O_CREATE, os.ModePerm)
+	conversations, err := get_all_conversations(authID)
+
+	file, err := os.OpenFile(filepath.Join(Conversation_Path, authID+".json"), os.O_WRONLY|os.O_TRUNC, os.ModePerm)
 	if err != nil {
 		log.Println("Temp file not created/found: ", err)
 		return err
 	}
 	defer file.Close()
 
+	for _, current_conversation := range conversations {
+		if current_conversation.ConversationID == conversation.ConversationID {
+			log.Println("Conversation already exists")
+			return errors.New("conversation already exists")
+		}
+	}
+
+	conversations = append(conversations, conversation)
+
 	encoder := json.NewEncoder(file)
-	encoder.Encode(conversation)
+	encoder.Encode(conversations)
 
 	return nil
 }

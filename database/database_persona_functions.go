@@ -260,6 +260,10 @@ func get_conversation(authID, conversation_id string) (Conversation, error) {
 
 func create_conversation(authID string, conversation Conversation) error {
 	conversations, err := get_all_conversations(authID)
+	if err != nil {
+		log.Println("Conversations not found: ", err)
+		return err
+	}
 
 	file, err := os.OpenFile(filepath.Join(Conversation_Path, authID+".json"), os.O_WRONLY|os.O_TRUNC, os.ModePerm)
 	if err != nil {

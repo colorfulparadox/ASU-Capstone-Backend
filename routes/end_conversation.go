@@ -8,7 +8,7 @@ import (
 )
 
 // Creates users
-func End_Conversation(gc *gin.Context) {
+func EndConversation(gc *gin.Context) {
 	var conversation Conversation
 
 	// Parses JSON received from client

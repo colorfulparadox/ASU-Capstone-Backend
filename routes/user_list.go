@@ -15,11 +15,14 @@ type SpecifyUser struct {
 }
 
 type UserElement struct {
-	Name        string `json:"name"`
-	Username    string `json:"username"`
-	Email       string `json:"email"`
-	Permissions int    `json:"permission_level"`
-	Points      int    `json:"points"`
+	Name             string `json:"name"`
+	Username         string `json:"username"`
+	Email            string `json:"email"`
+	Permissions      int    `json:"permission_level"`
+	Points           int    `json:"points"`
+	Sentiment_Points int    `json:"sentiment_points"`
+	Sales_Points     int    `json:"sales_points"`
+	Knowledge_Points int    `json:"knowledge_points"`
 }
 
 type UserElementList []UserElement
@@ -54,7 +57,21 @@ func UserList(gc *gin.Context) {
 				gc.JSON(http.StatusForbidden, "{}")
 				return
 			}
-			userElement.Points, err = strconv.Atoi(users[i][4])
+			userElement.Sentiment_Points, err = strconv.Atoi(users[i][4])
+			if err != nil {
+				log.Println("Incorrect data from API parser:", err)
+				gc.Request.Header.Add("backend-error", "true")
+				gc.JSON(http.StatusForbidden, "{}")
+				return
+			}
+			userElement.Sales_Points, err = strconv.Atoi(users[i][5])
+			if err != nil {
+				log.Println("Incorrect data from API parser:", err)
+				gc.Request.Header.Add("backend-error", "true")
+				gc.JSON(http.StatusForbidden, "{}")
+				return
+			}
+			userElement.Knowledge_Points, err = strconv.Atoi(users[i][6])
 			if err != nil {
 				log.Println("Incorrect data from API parser:", err)
 				gc.Request.Header.Add("backend-error", "true")

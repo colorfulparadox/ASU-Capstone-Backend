@@ -32,21 +32,21 @@ func Authenticate(gc *gin.Context) {
 	}
 
 	// Gets the enum int relating to results (can be found in api_parser starting at line 23)
-	user := database.Verify_User_Auth_Token(selectUser.AdminAuthID)
+	user, err := database.Verify_User_Auth_Token(selectUser.AdminAuthID)
 
-	if user.Username != "" {
-		returnUserData.Name = user.Name
-		returnUserData.Username = user.Username
-		returnUserData.Points = user.Sentiment_Points
-		returnUserData.Points = user.Sales_Points
-		returnUserData.Points = user.Knowledge_Points
-		returnUserData.PermissionLevel = user.PermissionLevel
-		returnUserData.Email = user.Email
-	} else {
-		gc.Request.Header.Add("backend-error", "true")
+	if err != nil {
+		gc.Header("backend-error", err.Error())
 		gc.JSON(http.StatusForbidden, "{}")
 		return
 	}
+
+	returnUserData.Name = user.Name
+	returnUserData.Username = user.Username
+	returnUserData.Points = user.Sentiment_Points
+	returnUserData.Points = user.Sales_Points
+	returnUserData.Points = user.Knowledge_Points
+	returnUserData.PermissionLevel = user.PermissionLevel
+	returnUserData.Email = user.Email
 
 	// Returns userResult
 	gc.JSON(http.StatusOK, returnUserData)

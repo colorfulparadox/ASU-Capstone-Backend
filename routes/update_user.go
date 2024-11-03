@@ -18,11 +18,16 @@ type UpdatedData struct {
 }
 
 type UpdateResult struct {
-	Result []int `json:"result"`
+	Name            bool `json:"name"`
+	Username        bool `json:"username"`
+	Password        bool `json:"password"`
+	PermissionLevel bool `json:"permission_level"`
+	Email           bool `json:"email"`
 }
 
 func Update_User(gc *gin.Context) {
 	var updatedData UpdatedData
+	var updateResult UpdateResult
 
 	updatedData.PermissionLevel = -1
 
@@ -33,39 +38,47 @@ func Update_User(gc *gin.Context) {
 		return
 	}
 
-	var user_update_success []int
+	var update_error []error
 
 	// Gets the enum int relating to results (can be found in api_parser starting at line 23)
 	if updatedData.Name != "" {
-		user_update_success = append(user_update_success, database.Set_Name(updatedData.UserAuthID, updatedData.Edit_User, updatedData.Name))
+		update_error = append(update_error, database.Set_Name(updatedData.UserAuthID, updatedData.Edit_User, updatedData.Name))
+		if update_error[len(update_error)-1] == nil {
+			updateResult.Name = true
+		}
 	}
 
 	if updatedData.Username != "" {
-		user_update_success = append(user_update_success, database.Set_Username(updatedData.UserAuthID, updatedData.Edit_User, updatedData.Username))
+		update_error = append(update_error, database.Set_Username(updatedData.UserAuthID, updatedData.Edit_User, updatedData.Username))
+		if update_error[len(update_error)-1] == nil {
+			updateResult.Username = true
+		}
 	}
 
 	if updatedData.Password != "" {
-		user_update_success = append(user_update_success, database.Set_Password(updatedData.UserAuthID, updatedData.Edit_User, updatedData.Password))
+		update_error = append(update_error, database.Set_Password(updatedData.UserAuthID, updatedData.Edit_User, updatedData.Password))
+		if update_error[len(update_error)-1] == nil {
+			updateResult.Password = true
+		}
 	}
 
 	if updatedData.PermissionLevel >= 0 {
-		user_update_success = append(user_update_success, database.Set_Permissions(updatedData.UserAuthID, updatedData.Edit_User, updatedData.PermissionLevel))
+		update_error = append(update_error, database.Set_Permissions(updatedData.UserAuthID, updatedData.Edit_User, updatedData.PermissionLevel))
+		if update_error[len(update_error)-1] == nil {
+			updateResult.PermissionLevel = true
+		}
 	}
 
 	if updatedData.Email != "" {
-		user_update_success = append(user_update_success, database.Set_Email(updatedData.UserAuthID, updatedData.Edit_User, updatedData.Email))
+		update_error = append(update_error, database.Set_Email(updatedData.UserAuthID, updatedData.Edit_User, updatedData.Email))
+		if update_error[len(update_error)-1] == nil {
+			updateResult.Email = true
+		}
 	}
 
-	// Puts int into JSON object
-	updateResult := UpdateResult{
-		Result: user_update_success,
-	}
-
-	for i := 0; i < len(updateResult.Result); i++ {
-		if !UserResults(updateResult.Result[i]) {
-			gc.Request.Header.Add("backend-error", "true")
-			gc.JSON(http.StatusForbidden, updateResult)
-			return
+	for i := 0; i < len(update_error); i++ {
+		if update_error[i] != nil {
+			gc.Header("backend-error", update_error[i].Error())
 		}
 	}
 

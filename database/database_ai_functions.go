@@ -2,8 +2,11 @@ package database
 
 import (
 	"context"
+	"encoding/json"
 	"errors"
 	"log"
+	"os"
+	"path/filepath"
 	"time"
 
 	"github.com/jackc/pgx/v5/pgxpool"
@@ -49,7 +52,7 @@ func create_ai_table() {
 	create_ai(ai)
 }
 
-func create_ai(ai AI) bool {
+func create_ai(ai AI) error {
 	conn := establish_connection()
 	var err error
 	defer conn.Close()
@@ -57,11 +60,12 @@ func create_ai(ai AI) bool {
 
 	name_ai, err := retrieve_ai_pass_conn(conn, ai.Name)
 	if err != nil {
-		log.Println("AI with that name could not be found:", err)
+		log.Println("Valid name")
 	}
 	if name_ai.Name == ai.Name {
-		log.Printf("Name: %s already in use\n", ai.Name)
-		return false
+		err := errors.New("Name: " + ai.Name + " already in use\n")
+		log.Println(err)
+		return err
 	}
 
 	log.Println("Creating ai")
@@ -75,14 +79,15 @@ func create_ai(ai AI) bool {
 	err = conn.QueryRow(context.Background(), insertSQL, ai.Name, ai.ModelName, ai.FileID, ai.VectorID, time.Now()).Scan(&aiID)
 	if err != nil {
 		log.Fatalf("Failed to insert data: %v\n", err)
+		return err
 	}
 
 	log.Printf("AI created with ID: %d\n", aiID)
-	return true
+	return nil
 }
 
 // TODO: need to create a function that checks against personas and makes sure they are up to date
-func update_ai(ai AI) bool {
+func update_ai(ai AI) error {
 	conn := establish_connection()
 	var err error
 	defer conn.Close()
@@ -91,13 +96,13 @@ func update_ai(ai AI) bool {
 	name_ai, err := retrieve_ai_pass_conn(conn, ai.Name)
 	if err != nil {
 		log.Println("AI with that name could not be found:", err)
-		return false
+		return err
 	}
 
 	// This checks to see if username is connected to a real user
 	if name_ai.Name != ai.Name {
 		log.Printf("AI: %s does not exist\n", ai.Name)
-		return false
+		return err
 	}
 	// Prepare the SQL statement for updating the user's name
 	updateAISQL := `UPDATE ai SET name = $1, model_name = $2, file_id = $3, vector_id = $4, last_edit = $5
@@ -107,10 +112,10 @@ func update_ai(ai AI) bool {
 	_, err = conn.Exec(context.Background(), updateAISQL, ai.Name, ai.ModelName, ai.FileID, ai.VectorID, time.Now())
 	if err != nil {
 		log.Fatalf("Failed to update AI's info: %v\n", err)
-		return false
+		return err
 	}
 	log.Println("Update Complete")
-	return true
+	return nil
 }
 
 // TODO: finish retrieve ai function
@@ -159,4 +164,23 @@ func retrieve_ai_pass_conn(conn *pgxpool.Pool, name string) (ai AI, err error) {
 		return
 	}
 	return
+}
+
+func create_menu_file(menu_data, menu_name, path string) (string, error) {
+	file, err := os.OpenFile(filepath.Join(path, menu_name+".json"), os.O_WRONLY|os.O_CREATE, os.ModePerm)
+	if err != nil {
+		log.Println("Menu file not created: ", err)
+		return "", err
+	}
+	defer file.Close()
+
+	encoder := json.NewEncoder(file)
+	err = encoder.Encode(menu_data)
+	if err != nil {
+		log.Println("Data not encoded into file: ", err)
+		err = os.Remove(filepath.Join(path, menu_name+".json"))
+		return "", err
+	}
+
+	return menu_name + ".json", nil
 }

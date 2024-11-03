@@ -4,9 +4,15 @@ package routes
 
 import "log"
 
-// UserResult is a basic JSON format for returning one of the result enum types ()
-type UserResult struct {
+// StandardResult is a basic JSON format for returning one of the result enum types ()
+type StandardResult struct {
 	Result int `json:"result"`
+}
+
+type Conversation struct {
+	AuthID         string `json:"authID"`
+	Message        string `json:"message"`
+	ConversationID string `json:"conversationID"`
 }
 
 func UserResults(user_creation_success int) bool {

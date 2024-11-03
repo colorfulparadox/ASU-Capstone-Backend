@@ -16,8 +16,10 @@ func main() {
 	godotenv.Load()
 
 	database.Create_Tables()
+	database.Initalize_Directories()
 
-	log.Println(database.Continue_Persona_Conversation("auth_id", "What are the total number of messages in this conversation", "conversation_id"))
+	//log.Fatalln(database.Conversation_Test("authID", "conversationID"))
+	log.Fatalln(database.Add_Menu_Test("default", `{"menu_info" : "test"}`))
 
 	r := router.NewRouter(":4040")
 

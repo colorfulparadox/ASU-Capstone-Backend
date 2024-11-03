@@ -2,6 +2,7 @@ package database
 
 import (
 	"context"
+	"errors"
 	"log"
 	"time"
 
@@ -71,21 +72,26 @@ func create_users_table() {
 //Function for adding user data including auth token===============================================
 
 // takes user object returns if user was created or not
-func create_user(user User) bool {
+func create_user(user User) error {
 	conn := establish_connection()
 	var err error
 	defer conn.Close()
 	defer log.Println("Conn Closed")
 
-	username_user, email_user := retrieve_user_pass_conn(conn, user.Username, user.Email)
+	username_user, email_user, _ := retrieve_user_pass_conn(conn, user.Username, user.Email)
+
+	log.Println("Checking User")
+
 	if username_user.Username == user.Username {
-		log.Printf("Username: %s already in use\n", user.Username)
-		return false
+		err = errors.New("Username " + user.Username + " already in use")
+		log.Println(err)
+		return err
 	}
 
 	if email_user.Email == user.Email {
-		log.Printf("Email: %s already in use\n", user.Email)
-		return false
+		err = errors.New("Email " + user.Email + " already in use")
+		log.Println(err)
+		return err
 	}
 
 	log.Printf("Creating user\n")
@@ -106,37 +112,46 @@ func create_user(user User) bool {
 	randomize_auth_token(user.AuthToken)
 
 	log.Printf("User created with ID: %d\n", userID)
-	return true
+	return nil
 }
 
 //Function for editing user data ==================================================================
 
-func update_user(username string, user User) bool {
+func update_user(username string, user User) error {
 	conn := establish_connection()
 	var err error
 	defer conn.Close()
 	defer log.Println("Conn Closed")
 
-	username_user, email_user := retrieve_user_pass_conn(conn, username, "")
+	username_user, email_user, err := retrieve_user_pass_conn(conn, username, "")
+	if err != nil {
+		return err
+	}
 
 	// This checks to see if username is connected to a real user
 	if username_user.Username != username {
-		log.Printf("User: %s does not exist\n", username)
-		return false
+		err = errors.New("User: " + user.Username + " does not exist")
+		log.Println(err)
+		return err
 	}
 	//This checks to make sure the desired info is not already in use
-	username_user, email_user = retrieve_user_pass_conn(conn, user.Username, user.Email)
+	username_user, email_user, err = retrieve_user_pass_conn(conn, user.Username, user.Email)
+	if err != nil {
+		return err
+	}
 	if username_user.UserID != user.UserID {
 		log.Println(username_user.UserID, user.UserID)
 		if username_user.Username == user.Username {
-			log.Printf("Username: %s already in use\n", user.Username)
-			return false
+			err = errors.New("Username: " + user.Username + " already in use")
+			log.Println(err)
+			return err
 		}
 	}
 	if email_user.UserID != user.UserID {
 		if email_user.Email == user.Email {
-			log.Printf("Email: %s already in use\n", user.Email)
-			return false
+			err = errors.New("Email: " + user.Username + " already in use")
+			log.Println(err)
+			return err
 		}
 	}
 
@@ -149,7 +164,7 @@ func update_user(username string, user User) bool {
 		_, err = conn.Exec(context.Background(), updateUserSQL, user.Name, user.Username, user.Sentiment_Points, user.Sales_Points, user.Knowledge_Points, user.PermissionLevel, user.Email, username)
 		if err != nil {
 			log.Fatalf("Failed to update user's info: %v\n", err)
-			return false
+			return err
 		}
 	} else {
 		// Prepare the SQL statement for updating the user's name
@@ -160,26 +175,30 @@ func update_user(username string, user User) bool {
 		_, err = conn.Exec(context.Background(), updateUserSQL, user.Name, user.Username, user.Password, HashPassword(user.Password), user.Sentiment_Points, user.Sales_Points, user.Knowledge_Points, user.PermissionLevel, user.Email, username)
 		if err != nil {
 			log.Fatalf("Failed to update user's info: %v\n", err)
-			return false
+			return err
 		}
 	}
 	log.Println("Update Complete")
-	return true
+	return nil
 }
 
 //Function for deleting a user ====================================================================
 
 // takes user object returns if user was created or not
-func delete_user(username string) bool {
+func delete_user(username string) error {
 	conn := establish_connection()
 	var err error
 	defer conn.Close()
 	defer log.Println("Conn Closed")
 
-	username_user, _ := retrieve_user_pass_conn(conn, username, "")
+	username_user, _, err := retrieve_user_pass_conn(conn, username, "")
+	if err != nil {
+		return err
+	}
 	if username_user.Username == "" {
-		log.Printf("User: %s does not exist", username)
-		return false
+		err = errors.New("User: " + username + " does not exist")
+		log.Println(err)
+		return err
 	}
 
 	// Prepare the SQL statement
@@ -190,17 +209,17 @@ func delete_user(username string) bool {
 	_, err = conn.Exec(context.Background(), deleteUserSQL, username)
 	if err != nil {
 		log.Fatalf("Failed to delete user: %v\n", err)
+		return err
 	}
 
 	log.Printf("Deleting User: %s\n", username)
-	return true
+	return nil
 }
 
 //Functions for retrieving user data ==============================================================
 
-func retrieve_user_username(username string) (user User) {
+func retrieve_user_username(username string) (user User, err error) {
 	conn := establish_connection()
-	var err error
 	defer conn.Close()
 	defer log.Println("Conn Closed")
 
@@ -232,9 +251,8 @@ func retrieve_user_username(username string) (user User) {
 	return
 }
 
-func retrieve_user_auth_token(auth_token string) (user User) {
+func retrieve_user_auth_token(auth_token string) (user User, err error) {
 	conn := establish_connection()
-	var err error
 	defer conn.Close()
 	defer log.Println("Conn Closed")
 
@@ -267,14 +285,14 @@ func retrieve_user_auth_token(auth_token string) (user User) {
 
 //private version of the Rerieve_user function that uses conn and err so a new connection does not have to be made
 
-func retrieve_user_pass_conn(conn *pgxpool.Pool, username, email string) (username_user, email_user User) {
+func retrieve_user_pass_conn(conn *pgxpool.Pool, username, email string) (username_user, email_user User, err error) {
 	// Prepare the SQL statement for selecting the user's data
 
 	selectUserSQL := `SELECT id, name, username, password, sentiment_points, sales_points, knowledge_points, permission_level, email, auth_token, date_issued, date_expr
     	FROM users
     	WHERE username = $1;`
 
-	err := conn.QueryRow(context.Background(), selectUserSQL, username).Scan(
+	err = conn.QueryRow(context.Background(), selectUserSQL, username).Scan(
 		&username_user.UserID, //the id variable should not be used outside the backend
 		&username_user.Name,
 		&username_user.Username,
@@ -322,7 +340,7 @@ func retrieve_user_pass_conn(conn *pgxpool.Pool, username, email string) (userna
 
 //Function for retrieving a list of all users =====================================================
 
-func retrieve_user_list() []User {
+func retrieve_user_list() ([]User, error) {
 	conn := establish_connection()
 	var err error
 	defer conn.Close()
@@ -336,6 +354,7 @@ func retrieve_user_list() []User {
 	if err != nil {
 		log.Printf("Could not get user ID's\n")
 		log.Printf("Returned error was: %v\n", err)
+		return nil, err
 	}
 
 	for validIDs.Next() {
@@ -370,12 +389,12 @@ func retrieve_user_list() []User {
 		}
 	}
 
-	return userList
+	return userList, nil
 }
 
 //Function for randomizing auth token ============================================================
 
-func randomize_auth_token(auth_token string) {
+func randomize_auth_token(auth_token string) error {
 	conn := establish_connection()
 	var err error
 	defer conn.Close()
@@ -395,5 +414,8 @@ func randomize_auth_token(auth_token string) {
 	_, err = conn.Exec(context.Background(), updateNameSQL, token, dateIssued, expires, auth_token)
 	if err != nil {
 		log.Fatalf("Failed to randomize user's auth_token: %v\n", err)
+		return err
 	}
+
+	return nil
 }

@@ -2,7 +2,6 @@ package routes
 
 import (
 	"BackEnd/database"
-	"log"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
@@ -29,12 +28,11 @@ func Login(gc *gin.Context) {
 	}
 
 	// Gets the auth_token for the specifc user
-	auth_token := database.Verify_User_Login(loginReq.User, loginReq.Pass)
+	auth_token, err := database.Verify_User_Login(loginReq.User, loginReq.Pass)
 
-	// Checks if user is valid
-	if auth_token == "" {
-		log.Println("username or password incorrect")
-		gc.Request.Header.Add("backend-error", "true")
+	// Checks if there was an error
+	if err != nil {
+		gc.Header("backend-error", err.Error())
 		gc.JSON(http.StatusForbidden, "{}")
 		return
 	}

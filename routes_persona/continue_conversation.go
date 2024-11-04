@@ -1,4 +1,4 @@
-package routes
+package routes_persona
 
 import (
 	"BackEnd/database"
@@ -8,7 +8,7 @@ import (
 )
 
 // Creates users
-func Start_Conversation(gc *gin.Context) {
+func Continue_Conversation(gc *gin.Context) {
 	var conversation Conversation
 
 	// Parses JSON received from client
@@ -19,7 +19,12 @@ func Start_Conversation(gc *gin.Context) {
 	}
 
 	// Gets the enum int relating to results
-	conversation.Message, err = database.Start_Persona_Conversation(conversation.AuthID, conversation.Message, conversation.ConversationID)
+	conversation.Message, err = database.Continue_Persona_Conversation(conversation.AuthID, conversation.Message, conversation.ConversationID)
+
+	new_conversation := Conversation{
+		Message:        conversation.Message,
+		ConversationID: conversation.ConversationID,
+	}
 
 	// Checks if there was an error
 	if err != nil {
@@ -29,5 +34,5 @@ func Start_Conversation(gc *gin.Context) {
 	}
 
 	// Returns userResult
-	gc.JSON(http.StatusOK, conversation)
+	gc.JSON(http.StatusOK, new_conversation)
 }

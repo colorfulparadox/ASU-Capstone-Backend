@@ -1,4 +1,4 @@
-package routes
+package routes_user
 
 import (
 	"BackEnd/database"

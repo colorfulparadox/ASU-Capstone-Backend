@@ -17,7 +17,6 @@ type Persona struct {
 	PersonaID    int       `json:"id"`
 	Name         string    `json:"name"`
 	AIName       string    `json:"ai_name"`
-	AssistantID  string    `json:"assistant_id"`
 	Description  string    `json:"description"`
 	Instructions string    `json:"instructions"`
 	LastEdit     time.Time `json:"last_edit"`
@@ -28,7 +27,6 @@ CREATE TABLE IF NOT EXISTS personas (
     id SERIAL PRIMARY KEY,
 	name VARCHAR(255) NOT NULL,
 	ai_name VARCHAR(255) NOT NULL,
-    assistant_id VARCHAR(255) NOT NULL,
     description VARCHAR(255) NOT NULL,
     instructions VARCHAR(255) NOT NULL,
 	last_edit TIMESTAMP NOT NULL
@@ -61,7 +59,6 @@ func create_persona(new_persona Persona) error {
 	conn := establish_connection()
 	defer conn.Close()
 	defer log.Println("Conn Closed")
-	client := openai.NewClient(os.Getenv("OPENAI_API_KEY"))
 
 	log.Println("Creating Persona")
 
@@ -81,43 +78,16 @@ func create_persona(new_persona Persona) error {
 		return err
 	}
 
-	var persona openai.AssistantRequest
-	var file_search openai.AssistantTool
-	// var vector_search openai.AssistantToolResource
-
-	file_search.Type = openai.AssistantToolTypeFileSearch
-	file_search.Function = nil
-
-	// file_id := openai.AssistantToolFileSearch{
-	// 	VectorStoreIDs: []string{ai.VectorID},
-	// }
-
-	// vector_search.FileSearch = &file_id
-
-	persona.Model = Model_Name
-	persona.Name = &new_persona.Name
-	persona.Description = &new_persona.Description
-	persona.Instructions = &new_persona.Instructions
-	persona.Tools = append(persona.Tools, file_search)
-	// persona.ToolResources = &vector_search
-
-	persona_result, err := client.CreateAssistant(context.Background(), persona)
-	if err != nil {
-		log.Fatalln("Persona not stored in openai: ", err)
-		return err
-	}
-
-	new_persona.AssistantID = persona_result.ID
 	new_persona.LastEdit = time.Now()
 
 	var personaID int
 
-	insertSQL := `INSERT INTO personas (name, ai_name, assistant_id, description, instructions, last_edit)
-    	VALUES ($1, $2, $3, $4, $5, $6) RETURNING id;`
+	insertSQL := `INSERT INTO personas (name, ai_name, description, instructions, last_edit)
+    	VALUES ($1, $2, $3, $4, $5) RETURNING id;`
 
 	// Execute the SQL statement using a prepared statement
 	err = conn.QueryRow(context.Background(), insertSQL,
-		new_persona.Name, new_persona.AIName, new_persona.AssistantID, new_persona.Description, new_persona.Instructions, ai.LastEdit).Scan(&personaID)
+		new_persona.Name, new_persona.AIName, new_persona.Description, new_persona.Instructions, ai.LastEdit).Scan(&personaID)
 	if err != nil {
 		log.Fatalf("Failed to insert data: %v\n", err)
 		return err
@@ -128,9 +98,55 @@ func create_persona(new_persona Persona) error {
 	return nil
 }
 
+func create_assistant(persona Persona, ai AI) (string, error) {
+	client := openai.NewClient(os.Getenv("OPENAI_API_KEY"))
+
+	var assistant openai.AssistantRequest
+	var file_search openai.AssistantTool
+	var vector_search openai.AssistantToolResource
+
+	file_search.Type = openai.AssistantToolTypeFileSearch
+	file_search.Function = nil
+
+	file_id := openai.AssistantToolFileSearch{
+		VectorStoreIDs: []string{ai.VectorID},
+	}
+
+	full_instructions := ai.Instructions + " " + persona.Instructions
+
+	vector_search.FileSearch = &file_id
+
+	assistant.Model = Model_Name
+	assistant.Name = &persona.Name
+	assistant.Description = &persona.Description
+	assistant.Instructions = &full_instructions
+	assistant.Tools = append(assistant.Tools, file_search)
+	assistant.ToolResources = &vector_search
+
+	persona_result, err := client.CreateAssistant(context.Background(), assistant)
+	if err != nil {
+		log.Fatalln("Persona not stored in openai: ", err)
+		return "", err
+	}
+
+	return persona_result.ID, nil
+}
+
+func delete_assistant(assistantID string) error {
+	client := openai.NewClient(os.Getenv("OPENAI_API_KEY"))
+
+	_, err := client.DeleteAssistant(context.Background(), assistantID)
+	if err != nil {
+		log.Fatalln("Persona not stored in openai: ", err)
+		return err
+	}
+
+	return nil
+}
+
 func retrieve_persona_pass_conn(conn *pgxpool.Pool, name string) (Persona, error) {
 	// Prepare the SQL statement for selecting the persona's data
-	selectUserSQL := `SELECT id, name, ai_name, assistant_id, description, instructions, last_edit
+	selectUserSQL := `SELECT id, name, ai_name, description, instructions, last_edit
 			FROM personas
 			WHERE name = $1;`
 
@@ -140,7 +156,6 @@ func retrieve_persona_pass_conn(conn *pgxpool.Pool, name string) (Persona, error
 		&persona.PersonaID, //the id variable should not be used outside the backend
 		&persona.Name,
 		&persona.AIName,
-		&persona.AssistantID,
 		&persona.Description,
 		&persona.Instructions,
 		&persona.LastEdit,
@@ -173,7 +188,7 @@ func retrieve_persona_list() ([]Persona, error) {
 		var persona Persona
 		validIDs.Scan(&current_persona)
 		// Prepare the SQL statement for selecting the user's data
-		selectUserSQL := `SELECT id, name, ai_name, assistant_id, description, instructions, last_edit
+		selectUserSQL := `SELECT id, name, ai_name, description, instructions, last_edit
 			FROM personas
 			WHERE id = $1;`
 
@@ -181,7 +196,6 @@ func retrieve_persona_list() ([]Persona, error) {
 			&persona.PersonaID, //the id variable should not be used outside the backend
 			&persona.Name,
 			&persona.AIName,
-			&persona.AssistantID,
 			&persona.Description,
 			&persona.Instructions,
 			&persona.LastEdit,
@@ -203,18 +217,13 @@ func get_last_message(conversation Conversation) (string, error) {
 	client := openai.NewClient(os.Getenv("OPENAI_API_KEY"))
 
 	var run_return openai.Run
+	var err error
 
-	for i := 0; i < Completed_Timeout; i++ {
-		time.Sleep(500 * time.Millisecond)
-		log.Println("Time")
-		run_return, err := client.RetrieveRun(context.Background(), conversation.ThreadID, conversation.RunID)
+	for run_return.Status != "completed" && run_return.RequiredAction == nil && run_return.LastError == nil {
+		run_return, err = client.RetrieveRun(context.Background(), conversation.ThreadID, conversation.RunID)
 		if err != nil {
 			log.Println("run not found: ", err)
 			return "run not found", err
-		}
-
-		if run_return.Status == "completed" {
-			break
 		}
 	}
 
@@ -233,8 +242,8 @@ func get_last_message(conversation Conversation) (string, error) {
 	return messages_return.Messages[0].Content[0].Text.Value, nil
 }
 
-func get_conversation(authID, conversation_id string) (Conversation, error) {
-	file, err := os.OpenFile(filepath.Join(Conversation_Path, authID+".json"), os.O_RDONLY, os.ModePerm)
+func get_conversation(username, conversation_id string) (Conversation, error) {
+	file, err := os.OpenFile(filepath.Join(Conversation_Path, username+".json"), os.O_RDONLY, os.ModePerm)
 	if err != nil {
 		log.Println("Temp file not found: ", err)
 		return Conversation{}, err
@@ -258,14 +267,40 @@ func get_conversation(authID, conversation_id string) (Conversation, error) {
 	return conversation, nil
 }
 
-func create_conversation(authID string, conversation Conversation) error {
-	conversations, err := get_all_conversations(authID)
+func create_conversation(assistant_id, message string) (openai.Run, error) {
+	client := openai.NewClient(os.Getenv("OPENAI_API_KEY"))
+
+	var thread openai.ThreadRequest
+	var run openai.CreateThreadAndRunRequest
+
+	thread.Messages = []openai.ThreadMessage{
+		{
+			Role:    "user",
+			Content: message,
+		},
+	}
+
+	run.AssistantID = assistant_id
+	run.Thread = thread
+
+	run_return, err := client.CreateThreadAndRun(context.Background(), run)
+
+	if err != nil {
+		log.Println("Thread not created:", err)
+		return openai.Run{}, err
+	}
+
+	return run_return, nil
+}
+
+func create_conversation_record(username string, conversation Conversation) error {
+	conversations, err := get_all_conversations(username)
 	if err != nil {
 		log.Println("Conversations not found: ", err)
 		return err
 	}
 
-	file, err := os.OpenFile(filepath.Join(Conversation_Path, authID+".json"), os.O_WRONLY|os.O_TRUNC, os.ModePerm)
+	file, err := os.OpenFile(filepath.Join(Conversation_Path, username+".json"), os.O_WRONLY|os.O_TRUNC, os.ModePerm)
 	if err != nil {
 		log.Println("Temp file not created/found: ", err)
 		return err
@@ -287,9 +322,35 @@ func create_conversation(authID string, conversation Conversation) error {
 	return nil
 }
 
+func update_conversation(assistant_id, thread_id, message string) (openai.Run, error) {
+	client := openai.NewClient(os.Getenv("OPENAI_API_KEY"))
+
+	var message_request openai.MessageRequest
+	var run_request openai.RunRequest
+
+	message_request.Role = "user"
+	message_request.Content = message
+
+	_, err := client.CreateMessage(context.Background(), thread_id, message_request)
+	if err != nil {
+		log.Println("Message not created:", err)
+		return openai.Run{}, err
+	}
+
+	run_request.AssistantID = assistant_id
+
+	run_return, err := client.CreateRun(context.Background(), thread_id, run_request)
+	if err != nil {
+		log.Println("Message not created:", err)
+		return openai.Run{}, err
+	}
+
+	return run_return, nil
+}
+
 // This is only to be used to change the RunID to work with openai systems DO NOT CHANGE ANYTHING ELSE WITH THIS FUNCTION
-func update_conversation_run_id(authID string, conversation Conversation) error {
-	conversations, err := get_all_conversations(authID)
+func update_conversation_run_id(username string, conversation Conversation) error {
+	conversations, err := get_all_conversations(username)
 	if err != nil {
 		log.Println("Could not get conversation file:", err)
 		return err
@@ -311,7 +372,7 @@ func update_conversation_run_id(authID string, conversation Conversation) error 
 
 	conversations[position] = conversation
 
-	file, err := os.OpenFile(filepath.Join(Conversation_Path, authID+".json"), os.O_WRONLY|os.O_TRUNC, os.ModePerm)
+	file, err := os.OpenFile(filepath.Join(Conversation_Path, username+".json"), os.O_WRONLY|os.O_TRUNC, os.ModePerm)
 	if err != nil {
 		log.Println("Temp file not created/found: ", err)
 		return err
@@ -324,8 +385,20 @@ func update_conversation_run_id(authID string, conversation Conversation) error 
 	return nil
 }
 
-func delete_conversation(authID string, conversation_id string) error {
-	conversations, err := get_all_conversations(authID)
+func delete_conversation(thread_id string) error {
+	client := openai.NewClient(os.Getenv("OPENAI_API_KEY"))
+
+	_, err := client.DeleteThread(context.Background(), thread_id)
+	if err != nil {
+		log.Println("Thread not deleted:", err)
+		return err
+	}
+
+	return nil
+}
+
+func delete_conversation_record(username string, conversation_id string) error {
+	conversations, err := get_all_conversations(username)
 	if err != nil {
 		log.Println("Could not get conversation file:", err)
 		return err
@@ -346,7 +419,7 @@ func delete_conversation(authID string, conversation_id string) error {
 	}
 
 	if len(conversations) <= 1 {
-		err = os.Remove(filepath.Join(Conversation_Path, authID+".json"))
+		err = os.Remove(filepath.Join(Conversation_Path, username+".json"))
 		if err != nil {
 			log.Println("Error deleting file:", err)
 			return File_Error()
@@ -356,7 +429,7 @@ func delete_conversation(authID string, conversation_id string) error {
 		new_conversations = append(new_conversations, conversations[:position]...)
 		new_conversations = append(new_conversations, conversations[position+1:]...)
 
-		file, err := os.OpenFile(filepath.Join(Conversation_Path, authID+".json"), os.O_WRONLY|os.O_TRUNC, os.ModePerm)
+		file, err := os.OpenFile(filepath.Join(Conversation_Path, username+".json"), os.O_WRONLY|os.O_TRUNC, os.ModePerm)
 		if err != nil {
 			log.Println("Temp file not created/found: ", err)
 			return err
@@ -370,8 +443,8 @@ func delete_conversation(authID string, conversation_id string) error {
 	return nil
 }
 
-func get_all_conversations(authID string) ([]Conversation, error) {
-	file, err := os.OpenFile(filepath.Join(Conversation_Path, authID+".json"), os.O_RDONLY|os.O_CREATE, os.ModePerm)
+func get_all_conversations(username string) ([]Conversation, error) {
+	file, err := os.OpenFile(filepath.Join(Conversation_Path, username+".json"), os.O_RDONLY|os.O_CREATE, os.ModePerm)
 	if err != nil {
 		log.Println("Temp file not found: ", err)
 		return nil, err
@@ -385,16 +458,17 @@ func get_all_conversations(authID string) ([]Conversation, error) {
 		log.Println("Error decoding JSON (EOF error is expected when creating a new file):", err)
 	}
 
+	log.Println(conversations)
+
 	return conversations, nil
 }
 
-func delete_conversation_file(authID string) error {
-	file, err := os.OpenFile(filepath.Join(Conversation_Path, authID+".json"), os.O_RDONLY, os.ModePerm)
+func delete_conversation_file(username string) error {
+	err := os.Remove(filepath.Join(Conversation_Path, username+".json"))
 	if err != nil {
 		log.Println("Temp file not found: ", err)
-		return File_Error()
+		return err
 	}
-	defer file.Close()
 
 	return nil
 }

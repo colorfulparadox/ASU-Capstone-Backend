@@ -1,12 +1,8 @@
 package database
 
 import (
-	"context"
 	"log"
 	"math/rand/v2"
-	"os"
-
-	"github.com/sashabaranov/go-openai"
 )
 
 type Conversation struct {
@@ -29,11 +25,9 @@ func New_Persona(persona_name, ai_name, description, instructions string) error 
 
 // TODO: Finish function and possibly add ability to select specific persona model
 func Start_Persona_Conversation(authID, message, conversation_id string) (string, error) {
-	if !Verify_Permissions(authID, start_conversation) {
+	if !Verify_Permissions(authID, set_conversation) {
 		return "", Invalid_Permissions()
 	}
-
-	client := openai.NewClient(os.Getenv("OPENAI_API_KEY"))
 
 	// Chooses a random persona to use
 	personas, err := retrieve_persona_list()
@@ -43,35 +37,41 @@ func Start_Persona_Conversation(authID, message, conversation_id string) (string
 	persona_value := rand.IntN(len(personas))
 	persona := personas[persona_value]
 
-	var thread openai.ThreadRequest
-	var run openai.CreateThreadAndRunRequest
-
-	thread.Messages = []openai.ThreadMessage{
-		{
-			Role:    "user",
-			Content: message,
-		},
+	ai, err := retrieve_ai(persona.AIName)
+	if err != nil {
+		return "", err
 	}
 
-	run.AssistantID = persona.AssistantID
-	run.Thread = thread
-
-	run_return, err := client.CreateThreadAndRun(context.Background(), run)
-
+	assistant_id, err := create_assistant(persona, ai)
 	if err != nil {
-		log.Println("Thread not created:", err)
-		return "Thread not created", err
+		return "", Error_With_External_Service()
+	}
+
+	run, err := create_conversation(assistant_id, message)
+	if err != nil {
+		delete_assistant(assistant_id)
+		return "", Error_With_External_Service()
 	}
 
 	var conversation Conversation
 
 	conversation.ConversationID = conversation_id
-	conversation.AssistantID = persona.AssistantID
-	conversation.ThreadID = run_return.ThreadID
-	conversation.RunID = run_return.ID
+	conversation.AssistantID = assistant_id
+	conversation.ThreadID = run.ThreadID
+	conversation.RunID = run.ID
 
-	err = create_conversation(authID, conversation)
+	user, err := retrieve_user_auth_token(authID)
 	if err != nil {
+		delete_assistant(conversation.AssistantID)
+		delete_conversation(conversation.ThreadID)
+		log.Println("Could not find user:", err)
+		return "Could not find user", File_Error()
+	}
+
+	err = create_conversation_record(user.Username, conversation)
+	if err != nil {
+		delete_assistant(conversation.AssistantID)
+		delete_conversation(conversation.ThreadID)
 		log.Println("Conversation not created:", err)
 		return "Conversation not created", File_Error()
 	}
@@ -81,41 +81,31 @@ func Start_Persona_Conversation(authID, message, conversation_id string) (string
 
 // TODO: finish Continue persona conversation function
 func Continue_Persona_Conversation(authID, message, conversation_id string) (string, error) {
-	if !Verify_Permissions(authID, continue_conversation) {
+	if !Verify_Permissions(authID, set_conversation) {
 		return "", Invalid_Permissions()
 	}
 
-	client := openai.NewClient(os.Getenv("OPENAI_API_KEY"))
+	user, err := retrieve_user_auth_token(authID)
+	if err != nil {
+		log.Println("User not found:", err)
+		return "User not found", Invalid_Data()
+	}
 
-	conversation, err := get_conversation(authID, conversation_id)
+	conversation, err := get_conversation(user.Username, conversation_id)
 	if err != nil {
 		log.Println("Message not found:", err)
 		return "Message not found", File_Error()
 	}
 
-	var message_request openai.MessageRequest
-	var run_request openai.RunRequest
-
-	message_request.Role = "user"
-	message_request.Content = message
-
-	_, err = client.CreateMessage(context.Background(), conversation.ThreadID, message_request)
+	run, err := update_conversation(conversation.AssistantID, conversation.ThreadID, message)
 	if err != nil {
-		log.Println("Message not created:", err)
-		return "Message not created", err
+		log.Println("Thread could not be updated:", err)
+		return "Thread could not be updated", Error_With_External_Service()
 	}
 
-	run_request.AssistantID = conversation.AssistantID
+	conversation.RunID = run.ID
 
-	run_return, err := client.CreateRun(context.Background(), conversation.ThreadID, run_request)
-	if err != nil {
-		log.Println("Message not created:", err)
-		return "Message not created", err
-	}
-
-	conversation.RunID = run_return.ID
-
-	err = update_conversation_run_id(authID, conversation)
+	err = update_conversation_run_id(user.Username, conversation)
 	if err != nil {
 		log.Println("Converstation not updated:", err)
 		return "Converstation not updated", File_Error()
@@ -126,25 +116,28 @@ func Continue_Persona_Conversation(authID, message, conversation_id string) (str
 
 // TODO: finish end persona conversation function
 func End_Persona_Conversation(authID, conversation_id string) error {
-	if !Verify_Permissions(authID, end_conversation) {
+	if !Verify_Permissions(authID, set_conversation) {
 		return Invalid_Permissions()
 	}
 
-	client := openai.NewClient(os.Getenv("OPENAI_API_KEY"))
+	user, err := retrieve_user_auth_token(authID)
+	if err != nil {
+		log.Println("User not found:", err)
+		return Invalid_Data()
+	}
 
-	conversation, err := get_conversation(authID, conversation_id)
+	conversation, err := get_conversation(user.Username, conversation_id)
 	if err != nil {
 		log.Println("Conversation not found:", err)
 		return File_Error()
 	}
 
-	_, err = client.DeleteThread(context.Background(), conversation.ThreadID)
+	err = delete_conversation(conversation.ThreadID)
 	if err != nil {
-		log.Println("Thread not deleted:", err)
 		return Error_With_External_Service()
 	}
 
-	err = delete_conversation(authID, conversation_id)
+	err = delete_conversation_record(user.Username, conversation_id)
 	if err != nil {
 		log.Println("Conversation object not deleted:", err)
 		return File_Error()
@@ -155,27 +148,36 @@ func End_Persona_Conversation(authID, conversation_id string) error {
 
 // TODO: finish end all persona conversations function
 func End_All_Persona_Conversations(authID string) error {
-	if !Verify_Permissions(authID, end_conversation) {
+	if !Verify_Permissions(authID, set_conversation) {
 		return Invalid_Permissions()
 	}
 
-	client := openai.NewClient(os.Getenv("OPENAI_API_KEY"))
+	user, err := retrieve_user_auth_token(authID)
+	if err != nil {
+		log.Println("User not found:", err)
+		return Invalid_Data()
+	}
 
-	conversations, err := get_all_conversations(authID)
+	conversations, err := get_all_conversations(user.Username)
 	if err != nil {
 		log.Println("Could not get conversation file:", err)
 		return File_Error()
 	}
 
 	for _, conversation := range conversations {
-		_, err := client.DeleteThread(context.Background(), conversation.ThreadID)
+		err = delete_assistant(conversation.AssistantID)
+		if err != nil {
+			log.Println("Error deleting Assistant:", err)
+			return Error_With_External_Service()
+		}
+		err = delete_conversation(conversation.ThreadID)
 		if err != nil {
 			log.Println("Error deleting Thread:", err)
 			return Error_With_External_Service()
 		}
 	}
 
-	err = delete_conversation_file(authID)
+	err = delete_conversation_file(user.Username)
 	if err != nil {
 		log.Println("Error deleting file:", err)
 		return File_Error()

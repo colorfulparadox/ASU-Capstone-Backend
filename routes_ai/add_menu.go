@@ -1,4 +1,4 @@
-package routes
+package routes_ai
 
 import (
 	"BackEnd/database"
@@ -7,23 +7,25 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
+type New_Menu struct {
+	AuthID  string `json:"authID"`
+	AI_Name string `json:"aiID"`
+	Menu    string `json:"menu"`
+}
+
 // Creates users
-func End_Conversation(gc *gin.Context) {
-	var conversation Conversation
+func Add_Menu(gc *gin.Context) {
+	var new_menu New_Menu
 
 	// Parses JSON received from client
-	err := gc.ShouldBindJSON(&conversation)
+	err := gc.ShouldBindJSON(&new_menu)
 	if err != nil {
 		gc.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
 
 	// Gets the enum int relating to results
-	if conversation.ConversationID == "" {
-		err = database.End_All_Persona_Conversations(conversation.AuthID)
-	} else {
-		err = database.End_Persona_Conversation(conversation.AuthID, conversation.ConversationID)
-	}
+	err = database.Add_Menu(new_menu.AuthID, new_menu.AI_Name, new_menu.Menu)
 
 	// Checks if there was an error
 	if err != nil {
@@ -33,5 +35,5 @@ func End_Conversation(gc *gin.Context) {
 	}
 
 	// Returns userResult
-	gc.JSON(http.StatusOK, conversation)
+	gc.JSON(http.StatusOK, StandardResult{Result: 0})
 }

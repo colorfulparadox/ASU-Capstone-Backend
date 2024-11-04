@@ -1,4 +1,4 @@
-package routes
+package routes_user
 
 import (
 	"BackEnd/database"
@@ -6,16 +6,6 @@ import (
 
 	"github.com/gin-gonic/gin"
 )
-
-type UpdatedData struct {
-	UserAuthID      string `json:"authID"`
-	Edit_User       string `json:"edit_user"`
-	Name            string `json:"name"`
-	Username        string `json:"username"`
-	Password        string `json:"password"`
-	PermissionLevel int    `json:"permission_level"`
-	Email           string `json:"email"`
-}
 
 type UpdateResult struct {
 	Name            bool `json:"name"`
@@ -26,13 +16,13 @@ type UpdateResult struct {
 }
 
 func Update_User(gc *gin.Context) {
-	var updatedData UpdatedData
+	var userData UserData
 	var updateResult UpdateResult
 
-	updatedData.PermissionLevel = -1
+	userData.PermissionLevel = -1
 
 	// Parses JSON received from client
-	err := gc.ShouldBindJSON(&updatedData)
+	err := gc.ShouldBindJSON(&userData)
 	if err != nil {
 		gc.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
@@ -41,36 +31,36 @@ func Update_User(gc *gin.Context) {
 	var update_error []error
 
 	// Gets the enum int relating to results (can be found in api_parser starting at line 23)
-	if updatedData.Name != "" {
-		update_error = append(update_error, database.Set_Name(updatedData.UserAuthID, updatedData.Edit_User, updatedData.Name))
+	if userData.Name != "" {
+		update_error = append(update_error, database.Set_Name(userData.AuthID, userData.Edit_User, userData.Name))
 		if update_error[len(update_error)-1] == nil {
 			updateResult.Name = true
 		}
 	}
 
-	if updatedData.Username != "" {
-		update_error = append(update_error, database.Set_Username(updatedData.UserAuthID, updatedData.Edit_User, updatedData.Username))
+	if userData.Username != "" {
+		update_error = append(update_error, database.Set_Username(userData.AuthID, userData.Edit_User, userData.Username))
 		if update_error[len(update_error)-1] == nil {
 			updateResult.Username = true
 		}
 	}
 
-	if updatedData.Password != "" {
-		update_error = append(update_error, database.Set_Password(updatedData.UserAuthID, updatedData.Edit_User, updatedData.Password))
+	if userData.Password != "" {
+		update_error = append(update_error, database.Set_Password(userData.AuthID, userData.Edit_User, userData.Password))
 		if update_error[len(update_error)-1] == nil {
 			updateResult.Password = true
 		}
 	}
 
-	if updatedData.PermissionLevel >= 0 {
-		update_error = append(update_error, database.Set_Permissions(updatedData.UserAuthID, updatedData.Edit_User, updatedData.PermissionLevel))
+	if userData.PermissionLevel >= 0 {
+		update_error = append(update_error, database.Set_Permissions(userData.AuthID, userData.Edit_User, userData.PermissionLevel))
 		if update_error[len(update_error)-1] == nil {
 			updateResult.PermissionLevel = true
 		}
 	}
 
-	if updatedData.Email != "" {
-		update_error = append(update_error, database.Set_Email(updatedData.UserAuthID, updatedData.Edit_User, updatedData.Email))
+	if userData.Email != "" {
+		update_error = append(update_error, database.Set_Email(userData.AuthID, userData.Edit_User, userData.Email))
 		if update_error[len(update_error)-1] == nil {
 			updateResult.Email = true
 		}

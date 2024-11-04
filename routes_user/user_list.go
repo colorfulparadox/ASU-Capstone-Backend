@@ -1,4 +1,4 @@
-package routes
+package routes_user
 
 import (
 	"BackEnd/database"
@@ -14,24 +14,13 @@ type SpecifyUser struct {
 	AdminList bool   `json:"admin"`
 }
 
-type UserElement struct {
-	Name             string `json:"name"`
-	Username         string `json:"username"`
-	Email            string `json:"email"`
-	Permissions      int    `json:"permission_level"`
-	Points           int    `json:"points"`
-	Sentiment_Points int    `json:"sentiment_points"`
-	Sales_Points     int    `json:"sales_points"`
-	Knowledge_Points int    `json:"knowledge_points"`
-}
-
-type UserElementList []UserElement
+type UserDataList []UserData
 
 // Creates users
 func User_List(gc *gin.Context) {
 	var specifyUser SpecifyUser
-	var userElement UserElement
-	var userList UserElementList
+	var userData UserData
+	var userList UserDataList
 	var users [][]string
 
 	// Parses JSON received from client
@@ -47,46 +36,46 @@ func User_List(gc *gin.Context) {
 		users = database.Get_Admin_User_List(specifyUser.AuthID)
 
 		for i := 0; i < len(users); i++ {
-			userElement.Name = users[i][0]
-			userElement.Username = users[i][1]
-			userElement.Email = users[i][2]
-			userElement.Permissions, err = strconv.Atoi(users[i][3])
+			userData.Name = users[i][0]
+			userData.Username = users[i][1]
+			userData.Email = users[i][2]
+			userData.PermissionLevel, err = strconv.Atoi(users[i][3])
 			if err != nil {
 				log.Println("Incorrect data from API parser:", err)
 				gc.Request.Header.Add("backend-error", "true")
 				gc.JSON(http.StatusForbidden, "{}")
 				return
 			}
-			userElement.Sentiment_Points, err = strconv.Atoi(users[i][4])
+			userData.Sentiment_Points, err = strconv.Atoi(users[i][4])
 			if err != nil {
 				log.Println("Incorrect data from API parser:", err)
 				gc.Request.Header.Add("backend-error", "true")
 				gc.JSON(http.StatusForbidden, "{}")
 				return
 			}
-			userElement.Sales_Points, err = strconv.Atoi(users[i][5])
+			userData.Sales_Points, err = strconv.Atoi(users[i][5])
 			if err != nil {
 				log.Println("Incorrect data from API parser:", err)
 				gc.Request.Header.Add("backend-error", "true")
 				gc.JSON(http.StatusForbidden, "{}")
 				return
 			}
-			userElement.Knowledge_Points, err = strconv.Atoi(users[i][6])
+			userData.Knowledge_Points, err = strconv.Atoi(users[i][6])
 			if err != nil {
 				log.Println("Incorrect data from API parser:", err)
 				gc.Request.Header.Add("backend-error", "true")
 				gc.JSON(http.StatusForbidden, "{}")
 				return
 			}
-			userList = append(userList, userElement)
+			userList = append(userList, userData)
 		}
 	} else {
 		users = database.Get_User_List(specifyUser.AuthID)
 
 		for i := 0; i < len(users); i++ {
-			userElement.Name = users[i][0]
-			userElement.Username = users[i][1]
-			userElement.Points, err = strconv.Atoi(users[i][2])
+			userData.Name = users[i][0]
+			userData.Username = users[i][1]
+			userData.Average_Points, err = strconv.Atoi(users[i][2])
 			if err != nil {
 				log.Println("Incorrect data from API parser:", err)
 				gc.Request.Header.Add("backend-error", "true")
@@ -94,7 +83,7 @@ func User_List(gc *gin.Context) {
 				return
 			}
 
-			userList = append(userList, userElement)
+			userList = append(userList, userData)
 		}
 	}
 

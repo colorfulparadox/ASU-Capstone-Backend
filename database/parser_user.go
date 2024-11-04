@@ -44,7 +44,6 @@ func Verify_User_Auth_Token(auth_token string) (User, error) {
 			log.Printf("Passing Current User to Function\n")
 			return user, nil
 		}
-		End_All_Persona_Conversations(auth_token)
 		randomize_auth_token(auth_token)
 		log.Println("Auth Token reset")
 	}
@@ -103,7 +102,7 @@ func Get_Admin_User_List(auth_token string) [][]string {
 // Adds a user to the database
 func New_User(auth_token, name, username, password string, permission_level int, email string) error {
 
-	if Verify_Permissions(auth_token, create_users) {
+	if Verify_Permissions(auth_token, set_users) {
 		user := User{
 			Name:            name,
 			Username:        username,
@@ -123,7 +122,7 @@ func New_User(auth_token, name, username, password string, permission_level int,
 // Adds a user to the database from a user object
 // This is used for testing and is not meant to be used in production
 func New_User_From_Object(auth_token string, user User) error {
-	if Verify_Permissions(auth_token, create_users) {
+	if Verify_Permissions(auth_token, set_users) {
 
 		create_user(user)
 
@@ -143,9 +142,9 @@ func Verify_Request(auth_token, username string, user_permission, admin_permissi
 
 	if user.Username == username || username == "" {
 		username = ""
-		security_level = edit_self
+		security_level = set_self
 	} else {
-		security_level = edit_users
+		security_level = set_users
 	}
 
 	if user.PermissionLevel < security_level {
@@ -157,7 +156,7 @@ func Verify_Request(auth_token, username string, user_permission, admin_permissi
 
 // takes the current user's auth token and the username and new name of the user to be changed
 func Set_Name(auth_token string, username string, new_name string) error {
-	user, err := Verify_Request(auth_token, username, edit_self, edit_users)
+	user, err := Verify_Request(auth_token, username, set_self, set_users)
 	if err != nil {
 		return Invalid_Permissions()
 	}
@@ -183,10 +182,12 @@ func Set_Name(auth_token string, username string, new_name string) error {
 
 // takes the current user's auth token and the old and new username of the user to be changed
 func Set_Username(auth_token string, username string, new_username string) error {
-	user, err := Verify_Request(auth_token, username, edit_self, edit_users)
+	user, err := Verify_Request(auth_token, username, set_self, set_users)
 	if err != nil {
 		return Invalid_Permissions()
 	}
+
+	End_All_Persona_Conversations(username)
 
 	//Applies change to user
 	if username != "" {
@@ -210,7 +211,7 @@ func Set_Username(auth_token string, username string, new_username string) error
 
 // takes the current user's auth token and the username and new password of the user to be changed
 func Set_Password(auth_token string, username string, new_password string) error {
-	user, err := Verify_Request(auth_token, username, edit_self, edit_users)
+	user, err := Verify_Request(auth_token, username, set_self, set_users)
 	if err != nil {
 		return Invalid_Permissions()
 	}
@@ -237,7 +238,7 @@ func Set_Password(auth_token string, username string, new_password string) error
 // takes the current user's auth token and the username and new permission level of the user to be changed
 func Set_Permissions(auth_token string, username string, new_permission int) error {
 	//Checks permissions then applies change to user
-	if Verify_Permissions(auth_token, edit_permissions) {
+	if Verify_Permissions(auth_token, set_permissions) {
 		user, err := retrieve_user_username(username)
 		if err != nil {
 			return Invalid_Data()
@@ -258,7 +259,7 @@ func Set_Permissions(auth_token string, username string, new_permission int) err
 
 // takes the current user's auth token and the username and new email of the user to be changed
 func Set_Email(auth_token string, username string, new_email string) error {
-	user, err := Verify_Request(auth_token, username, edit_self, edit_users)
+	user, err := Verify_Request(auth_token, username, set_self, set_users)
 	if err != nil {
 		return Invalid_Permissions()
 	}
@@ -289,7 +290,7 @@ func Modify_Points(auth_token string, sentiment_points, sales_points, knowledge_
 	if err != nil {
 		return 0, 0, 0, Invalid_Data()
 	}
-	if Verify_Permissions(auth_token, edit_self) {
+	if Verify_Permissions(auth_token, set_self) {
 
 		user.Sentiment_Points += sentiment_points
 
@@ -325,7 +326,7 @@ func Modify_Points(auth_token string, sentiment_points, sales_points, knowledge_
 
 // Randomizes the user auth token
 func Randomize_Auth_Token(auth_token, username string) error {
-	user, err := Verify_Request(auth_token, username, edit_self, edit_users)
+	user, err := Verify_Request(auth_token, username, set_self, set_users)
 	if err != nil {
 		return Invalid_Permissions()
 	}

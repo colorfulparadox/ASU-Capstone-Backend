@@ -1,4 +1,4 @@
-package routes
+package routes_user
 
 import (
 	"BackEnd/database"
@@ -7,24 +7,24 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-type DeleteUserTokens struct {
+type ResetAuthTokens struct {
 	CurrentAuthID string `json:"authID"`
-	DeleteUser    string `json:"username"`
+	ResetUser     string `json:"username"`
 }
 
 // Meant to be used in scenarios where you need to log out all devices
-func Delete_User(gc *gin.Context) {
-	var deleteUserTokens DeleteUserTokens
+func Reset_Auth_Token(gc *gin.Context) {
+	var resetAuthTokens ResetAuthTokens
 
 	// Parses JSON received from client
-	err := gc.ShouldBindJSON(&deleteUserTokens)
+	err := gc.ShouldBindJSON(&resetAuthTokens)
 	if err != nil {
 		gc.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
 
-	// Gets the enum int relating to results (can be found in api_parser starting at line 23)
-	err = database.Delete_User(deleteUserTokens.CurrentAuthID, deleteUserTokens.DeleteUser)
+	// Gets the enum int relating to creation (can be found in api_parser starting at line 23)
+	err = database.Randomize_Auth_Token(resetAuthTokens.CurrentAuthID, resetAuthTokens.ResetUser)
 
 	// Checks if there was an error
 	if err != nil {

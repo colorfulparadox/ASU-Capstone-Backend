@@ -1,8 +1,29 @@
-package routes
+// Basic file simply to hold commonly used data for other routes
+
+package routes_user
 
 import (
 	"BackEnd/router"
 )
+
+type UserData struct {
+	AuthID           string `json:"authID"`
+	Edit_User        string `json:"edit_user"`
+	Name             string `json:"name"`
+	Username         string `json:"username"`
+	Password         string `json:"password"`
+	Average_Points   int    `json:"points"`
+	Sentiment_Points int    `java:"sentiment_points"`
+	Sales_Points     int    `java:"sales_points"`
+	Knowledge_Points int    `java:"knowledge_points"`
+	PermissionLevel  int    `json:"permission_level"`
+	Email            string `json:"email"`
+}
+
+// StandardResult is a basic JSON format for returning one of the result enum types ()
+type StandardResult struct {
+	Result int `json:"result"`
+}
 
 func User_Routes(r router.Router) {
 	router.AddRoute(&r, router.Receiver{
@@ -51,33 +72,5 @@ func User_Routes(r router.Router) {
 		Route:     "/user_list",
 		RouteType: router.RoutePost,
 		Sender:    User_List,
-	})
-}
-
-func AI_Routes(r router.Router) {
-	router.AddRoute(&r, router.Receiver{
-		Route:     "/add_menu",
-		RouteType: router.RoutePost,
-		Sender:    Add_Menu,
-	})
-}
-
-func Persona_Routes(r router.Router) {
-	router.AddRoute(&r, router.Receiver{
-		Route:     "/start_conversation",
-		RouteType: router.RoutePost,
-		Sender:    Start_Conversation,
-	})
-
-	router.AddRoute(&r, router.Receiver{
-		Route:     "/continue_conversation",
-		RouteType: router.RoutePost,
-		Sender:    Continue_Conversation,
-	})
-
-	router.AddRoute(&r, router.Receiver{
-		Route:     "/end_conversation",
-		RouteType: router.RoutePost,
-		Sender:    End_Conversation,
 	})
 }

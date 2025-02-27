@@ -4,7 +4,6 @@ import (
 	"BackEnd/database"
 	"BackEnd/router"
 	"BackEnd/routes"
-	"BackEnd/routes_ai"
 	"BackEnd/routes_persona"
 	"BackEnd/routes_user"
 
@@ -33,7 +32,7 @@ func main() {
 	})
 
 	routes_user.User_Routes(r)
-	routes_ai.AI_Routes(r)
+	// routes_ai.AI_Routes(r)
 	routes_persona.Persona_Routes(r)
 
 	router.RunRouter(r)

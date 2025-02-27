@@ -2,7 +2,6 @@ package database
 
 import (
 	"log"
-	"math/rand/v2"
 )
 
 type Conversation struct {
@@ -12,37 +11,24 @@ type Conversation struct {
 	RunID          string `json:"run_id"`
 }
 
-func New_Persona(persona_name, ai_name, description, instructions string) error {
-	persona := Persona{
-		Name:         persona_name,
-		AIName:       ai_name,
-		Description:  description,
-		Instructions: instructions,
-	}
+// func New_Persona(persona_name, ai_name, description, instructions string) error {
+// 	persona := Persona{
+// 		Name:         persona_name,
+// 		AIName:       ai_name,
+// 		Description:  description,
+// 		Instructions: instructions,
+// 	}
 
-	return create_persona(persona)
-}
+// 	return create_persona(persona)
+// }
 
 // TODO: Finish function and possibly add ability to select specific persona model
-func Start_Persona_Conversation(authID, message, conversation_id string) (string, error) {
+func Start_Persona_Conversation(authID, instructions, message, conversation_id string) (string, error) {
 	if !Verify_Permissions(authID, set_conversation) {
 		return "", Invalid_Permissions()
 	}
 
-	// Chooses a random persona to use
-	personas, err := retrieve_persona_list()
-	if err != nil {
-		return "", err
-	}
-	persona_value := rand.IntN(len(personas))
-	persona := personas[persona_value]
-
-	ai, err := retrieve_ai(persona.AIName)
-	if err != nil {
-		return "", err
-	}
-
-	assistant_id, err := create_assistant(persona, ai)
+	assistant_id, err := create_assistant(instructions, conversation_id)
 	if err != nil {
 		return "", Error_With_External_Service()
 	}
@@ -63,7 +49,7 @@ func Start_Persona_Conversation(authID, message, conversation_id string) (string
 	user, err := retrieve_user_auth_token(authID)
 	if err != nil {
 		delete_assistant(conversation.AssistantID)
-		delete_conversation(conversation.ThreadID)
+		delete_thread(conversation.ThreadID)
 		log.Println("Could not find user:", err)
 		return "Could not find user", File_Error()
 	}
@@ -71,7 +57,7 @@ func Start_Persona_Conversation(authID, message, conversation_id string) (string
 	err = create_conversation_record(user.Username, conversation)
 	if err != nil {
 		delete_assistant(conversation.AssistantID)
-		delete_conversation(conversation.ThreadID)
+		delete_thread(conversation.ThreadID)
 		log.Println("Conversation not created:", err)
 		return "Conversation not created", File_Error()
 	}
@@ -132,7 +118,7 @@ func End_Persona_Conversation(authID, conversation_id string) error {
 		return File_Error()
 	}
 
-	err = delete_conversation(conversation.ThreadID)
+	err = delete_conversation(conversation)
 	if err != nil {
 		return Error_With_External_Service()
 	}
@@ -165,14 +151,9 @@ func End_All_Persona_Conversations(authID string) error {
 	}
 
 	for _, conversation := range conversations {
-		err = delete_assistant(conversation.AssistantID)
+		err = delete_conversation(conversation)
 		if err != nil {
-			log.Println("Error deleting Assistant:", err)
-			return Error_With_External_Service()
-		}
-		err = delete_conversation(conversation.ThreadID)
-		if err != nil {
-			log.Println("Error deleting Thread:", err)
+			log.Println("Error deleting Conversation:", err)
 			return Error_With_External_Service()
 		}
 	}

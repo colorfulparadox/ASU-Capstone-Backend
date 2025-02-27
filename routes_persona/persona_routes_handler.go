@@ -5,6 +5,7 @@ import "BackEnd/router"
 type Conversation struct {
 	AuthID         string `json:"authID"`
 	Message        string `json:"message"`
+	Instructions   string `json:"instructions"`
 	ConversationID string `json:"conversationID"`
 }
 

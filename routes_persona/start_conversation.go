@@ -19,7 +19,7 @@ func Start_Conversation(gc *gin.Context) {
 	}
 
 	// Gets the enum int relating to results
-	conversation.Message, err = database.Start_Persona_Conversation(conversation.AuthID, conversation.Message, conversation.ConversationID)
+	conversation.Message, err = database.Start_Persona_Conversation(conversation.AuthID, conversation.Message, conversation.Instructions, conversation.ConversationID)
 
 	new_conversation := Conversation{
 		Message:        conversation.Message,

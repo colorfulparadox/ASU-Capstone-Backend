@@ -1,39 +1,32 @@
 package routes_ai
 
-import (
-	"BackEnd/database"
-	"net/http"
+// type New_Menu struct {
+// 	AuthID  string `json:"authID"`
+// 	AI_Name string `json:"aiID"`
+// 	Menu    string `json:"menu"`
+// }
 
-	"github.com/gin-gonic/gin"
-)
+// // Creates users
+// func Add_Menu(gc *gin.Context) {
+// 	var new_menu New_Menu
 
-type New_Menu struct {
-	AuthID  string `json:"authID"`
-	AI_Name string `json:"aiID"`
-	Menu    string `json:"menu"`
-}
+// 	// Parses JSON received from client
+// 	err := gc.ShouldBindJSON(&new_menu)
+// 	if err != nil {
+// 		gc.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+// 		return
+// 	}
 
-// Creates users
-func Add_Menu(gc *gin.Context) {
-	var new_menu New_Menu
+// 	// Gets the enum int relating to results
+// 	err = database.Add_Menu(new_menu.AuthID, new_menu.AI_Name, new_menu.Menu)
 
-	// Parses JSON received from client
-	err := gc.ShouldBindJSON(&new_menu)
-	if err != nil {
-		gc.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
-		return
-	}
+// 	// Checks if there was an error
+// 	if err != nil {
+// 		gc.Header("backend-error", err.Error())
+// 		gc.JSON(http.StatusForbidden, "{}")
+// 		return
+// 	}
 
-	// Gets the enum int relating to results
-	err = database.Add_Menu(new_menu.AuthID, new_menu.AI_Name, new_menu.Menu)
-
-	// Checks if there was an error
-	if err != nil {
-		gc.Header("backend-error", err.Error())
-		gc.JSON(http.StatusForbidden, "{}")
-		return
-	}
-
-	// Returns userResult
-	gc.JSON(http.StatusOK, StandardResult{Result: 0})
-}
+// 	// Returns userResult
+// 	gc.JSON(http.StatusOK, StandardResult{Result: 0})
+// }

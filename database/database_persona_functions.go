@@ -7,129 +7,124 @@ import (
 	"log"
 	"os"
 	"path/filepath"
-	"time"
 
-	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/sashabaranov/go-openai"
 )
 
-type Persona struct {
-	PersonaID    int       `json:"id"`
-	Name         string    `json:"name"`
-	AIName       string    `json:"ai_name"`
-	Description  string    `json:"description"`
-	Instructions string    `json:"instructions"`
-	LastEdit     time.Time `json:"last_edit"`
-}
+// type Persona struct {
+// 	PersonaID    int       `json:"id"`
+// 	Name         string    `json:"name"`
+// 	AIName       string    `json:"ai_name"`
+// 	Description  string    `json:"description"`
+// 	Instructions string    `json:"instructions"`
+// 	LastEdit     time.Time `json:"last_edit"`
+// }
 
-const personaTableSQL = `
-CREATE TABLE IF NOT EXISTS personas (
-    id SERIAL PRIMARY KEY,
-	name VARCHAR(255) NOT NULL,
-	ai_name VARCHAR(255) NOT NULL,
-    description VARCHAR(255) NOT NULL,
-    instructions VARCHAR(255) NOT NULL,
-	last_edit TIMESTAMP NOT NULL
-);`
+// const personaTableSQL = `
+// CREATE TABLE IF NOT EXISTS personas (
+//     id SERIAL PRIMARY KEY,
+// 	name VARCHAR(255) NOT NULL,
+// 	ai_name VARCHAR(255) NOT NULL,
+//     description VARCHAR(255) NOT NULL,
+//     instructions VARCHAR(255) NOT NULL,
+// 	last_edit TIMESTAMP NOT NULL
+// );`
 
-func create_persona_table() {
-	conn := establish_connection()
-	var err error
-	defer conn.Close()
-	defer log.Println("Conn Closed")
+// func create_persona_table() {
+// 	conn := establish_connection()
+// 	var err error
+// 	defer conn.Close()
+// 	defer log.Println("Conn Closed")
 
-	// Create tables (if they don't exist)
-	_, err = conn.Exec(context.Background(), personaTableSQL)
-	if err != nil {
-		log.Fatalf("Failed to create table: %v\n", err)
-	}
+// 	// Create tables (if they don't exist)
+// 	_, err = conn.Exec(context.Background(), personaTableSQL)
+// 	if err != nil {
+// 		log.Fatalf("Failed to create table: %v\n", err)
+// 	}
 
-	persona := Persona{
-		Name:         "default",
-		AIName:       "default",
-		Description:  "A default AI created for testing",
-		Instructions: "You are a default ai used for testing, your primary directive is to let the user know that you are functioning correctly",
-	}
+// 	persona := Persona{
+// 		Name:         "default",
+// 		AIName:       "default",
+// 		Description:  "A default AI created for testing",
+// 		Instructions: "You are a default ai used for testing, your primary directive is to let the user know that you are functioning correctly",
+// 	}
 
-	create_persona(persona)
-}
+// 	create_persona(persona)
+// }
 
 // TODO: finish create persona function
-func create_persona(new_persona Persona) error {
-	conn := establish_connection()
-	defer conn.Close()
-	defer log.Println("Conn Closed")
+// func create_persona(new_persona Persona) error {
+// 	conn := establish_connection()
+// 	defer conn.Close()
+// 	defer log.Println("Conn Closed")
 
-	log.Println("Creating Persona")
+// 	log.Println("Creating Persona")
 
-	current_persona, err := retrieve_persona_pass_conn(conn, new_persona.Name)
-	if err != nil {
-		log.Println("AI model could not be retrieved:", err)
-	} else {
-		if current_persona.Name == new_persona.Name {
-			err := errors.New("Persona already esists")
-			return err
-		}
-	}
+// 	current_persona, err := retrieve_persona_pass_conn(conn, new_persona.Name)
+// 	if err != nil {
+// 		log.Println("AI model could not be retrieved:", err)
+// 	} else {
+// 		if current_persona.Name == new_persona.Name {
+// 			err := errors.New("Persona already esists")
+// 			return err
+// 		}
+// 	}
 
-	ai, err := retrieve_ai(new_persona.AIName)
-	if err != nil {
-		log.Println("AI model could not be retrieved:", err)
-		return err
-	}
+// 	ai, err := retrieve_ai(new_persona.AIName)
+// 	if err != nil {
+// 		log.Println("AI model could not be retrieved:", err)
+// 		return err
+// 	}
 
-	new_persona.LastEdit = time.Now()
+// 	new_persona.LastEdit = time.Now()
 
-	var personaID int
+// 	var personaID int
 
-	insertSQL := `INSERT INTO personas (name, ai_name, description, instructions, last_edit)
-    	VALUES ($1, $2, $3, $4, $5) RETURNING id;`
+// 	insertSQL := `INSERT INTO personas (name, ai_name, description, instructions, last_edit)
+//     	VALUES ($1, $2, $3, $4, $5) RETURNING id;`
 
-	// Execute the SQL statement using a prepared statement
-	err = conn.QueryRow(context.Background(), insertSQL,
-		new_persona.Name, new_persona.AIName, new_persona.Description, new_persona.Instructions, ai.LastEdit).Scan(&personaID)
-	if err != nil {
-		log.Fatalf("Failed to insert data: %v\n", err)
-		return err
-	}
+// 	// Execute the SQL statement using a prepared statement
+// 	err = conn.QueryRow(context.Background(), insertSQL,
+// 		new_persona.Name, new_persona.AIName, new_persona.Description, new_persona.Instructions, ai.LastEdit).Scan(&personaID)
+// 	if err != nil {
+// 		log.Fatalf("Failed to insert data: %v\n", err)
+// 		return err
+// 	}
 
-	log.Println(new_persona)
+// 	log.Println(new_persona)
 
-	return nil
-}
+// 	return nil
+// }
 
-func create_assistant(persona Persona, ai AI) (string, error) {
+func create_assistant(instructions, conversation_id string) (string, error) {
 	client := openai.NewClient(os.Getenv("OPENAI_API_KEY"))
 
 	var assistant openai.AssistantRequest
-	var file_search openai.AssistantTool
-	var vector_search openai.AssistantToolResource
+	// var file_search openai.AssistantTool
+	// var vector_search openai.AssistantToolResource
 
-	file_search.Type = openai.AssistantToolTypeFileSearch
-	file_search.Function = nil
+	// file_search.Type = openai.AssistantToolTypeFileSearch
+	// file_search.Function = nil
 
-	file_id := openai.AssistantToolFileSearch{
-		VectorStoreIDs: []string{ai.VectorID},
-	}
-
-	full_instructions := ai.Instructions + " " + persona.Instructions
-
-	vector_search.FileSearch = &file_id
+	// file_id := openai.AssistantToolFileSearch{
+	// 	VectorStoreIDs: []string{ai.VectorID},
+	// }
+	// vector_search.FileSearch = &file_id
 
 	assistant.Model = Model_Name
-	assistant.Name = &persona.Name
-	assistant.Description = &persona.Description
-	assistant.Instructions = &full_instructions
-	assistant.Tools = append(assistant.Tools, file_search)
-	assistant.ToolResources = &vector_search
+	assistant.Name = &conversation_id
+	// assistant.Description = &persona.Description
+	assistant.Instructions = &instructions
+	// assistant.Tools = append(assistant.Tools, file_search)
+	// assistant.ToolResources = &vector_search
 
-	persona_result, err := client.CreateAssistant(context.Background(), assistant)
+	assistant_result, err := client.CreateAssistant(context.Background(), assistant)
 	if err != nil {
 		log.Fatalln("Persona not stored in openai: ", err)
 		return "", err
 	}
 
-	return persona_result.ID, nil
+	return assistant_result.ID, nil
 }
 
 func delete_assistant(assistantID string) error {
@@ -144,74 +139,74 @@ func delete_assistant(assistantID string) error {
 	return nil
 }
 
-func retrieve_persona_pass_conn(conn *pgxpool.Pool, name string) (Persona, error) {
-	// Prepare the SQL statement for selecting the persona's data
-	selectUserSQL := `SELECT id, name, ai_name, description, instructions, last_edit
-			FROM personas
-			WHERE name = $1;`
+// func retrieve_persona_pass_conn(conn *pgxpool.Pool, name string) (Persona, error) {
+// 	// Prepare the SQL statement for selecting the persona's data
+// 	selectUserSQL := `SELECT id, name, ai_name, description, instructions, last_edit
+// 			FROM personas
+// 			WHERE name = $1;`
 
-	var persona Persona
+// 	// var persona Persona
 
-	err := conn.QueryRow(context.Background(), selectUserSQL, name).Scan(
-		&persona.PersonaID, //the id variable should not be used outside the backend
-		&persona.Name,
-		&persona.AIName,
-		&persona.Description,
-		&persona.Instructions,
-		&persona.LastEdit,
-	)
-	if err != nil {
-		err = errors.New("Failed to retireve AI:" + err.Error())
-		return persona, err
-	}
-	return persona, nil
-}
+// 	err := conn.QueryRow(context.Background(), selectUserSQL, name).Scan(
+// 		&persona.PersonaID, //the id variable should not be used outside the backend
+// 		&persona.Name,
+// 		&persona.AIName,
+// 		&persona.Description,
+// 		&persona.Instructions,
+// 		&persona.LastEdit,
+// 	)
+// 	if err != nil {
+// 		err = errors.New("Failed to retireve AI:" + err.Error())
+// 		return persona, err
+// 	}
+// 	return persona, nil
+// }
 
-func retrieve_persona_list() ([]Persona, error) {
-	conn := establish_connection()
-	var err error
-	defer conn.Close()
-	defer log.Println("Conn Closed")
+// func retrieve_persona_list() ([]Persona, error) {
+// 	conn := establish_connection()
+// 	var err error
+// 	defer conn.Close()
+// 	defer log.Println("Conn Closed")
 
-	getIDsSQL := `SELECT id FROM users`
-	validIDs, err := conn.Query(context.Background(), getIDsSQL)
-	if err != nil {
-		log.Printf("Could not get user ID's\n")
-		log.Printf("Returned error was: %v\n", err)
-		return nil, err
-	}
+// 	getIDsSQL := `SELECT id FROM users`
+// 	validIDs, err := conn.Query(context.Background(), getIDsSQL)
+// 	if err != nil {
+// 		log.Printf("Could not get user ID's\n")
+// 		log.Printf("Returned error was: %v\n", err)
+// 		return nil, err
+// 	}
 
-	var personaList []Persona
-	var current_persona int
+// 	var personaList []Persona
+// 	var current_persona int
 
-	for validIDs.Next() {
-		var persona Persona
-		validIDs.Scan(&current_persona)
-		// Prepare the SQL statement for selecting the user's data
-		selectUserSQL := `SELECT id, name, ai_name, description, instructions, last_edit
-			FROM personas
-			WHERE id = $1;`
+// 	for validIDs.Next() {
+// 		var persona Persona
+// 		validIDs.Scan(&current_persona)
+// 		// Prepare the SQL statement for selecting the user's data
+// 		selectUserSQL := `SELECT id, name, ai_name, description, instructions, last_edit
+// 			FROM personas
+// 			WHERE id = $1;`
 
-		err = conn.QueryRow(context.Background(), selectUserSQL, current_persona).Scan(
-			&persona.PersonaID, //the id variable should not be used outside the backend
-			&persona.Name,
-			&persona.AIName,
-			&persona.Description,
-			&persona.Instructions,
-			&persona.LastEdit,
-		)
-		if err != nil {
-			log.Printf("An Error occured retrieving user data: %v\n", err)
-			break
-		} else {
-			log.Printf("Retrieved user: %s\n", persona.Name)
-			personaList = append(personaList, persona)
-			continue
-		}
-	}
+// 		err = conn.QueryRow(context.Background(), selectUserSQL, current_persona).Scan(
+// 			&persona.PersonaID, //the id variable should not be used outside the backend
+// 			&persona.Name,
+// 			&persona.AIName,
+// 			&persona.Description,
+// 			&persona.Instructions,
+// 			&persona.LastEdit,
+// 		)
+// 		if err != nil {
+// 			log.Printf("An Error occured retrieving user data: %v\n", err)
+// 			break
+// 		} else {
+// 			log.Printf("Retrieved user: %s\n", persona.Name)
+// 			personaList = append(personaList, persona)
+// 			continue
+// 		}
+// 	}
 
-	return personaList, nil
-}
+// 	return personaList, nil
+// }
 
 func get_last_message(conversation Conversation) (string, error) {
 	client := openai.NewClient(os.Getenv("OPENAI_API_KEY"))
@@ -385,12 +380,29 @@ func update_conversation_run_id(username string, conversation Conversation) erro
 	return nil
 }
 
-func delete_conversation(thread_id string) error {
+func delete_thread(thread_id string) error {
 	client := openai.NewClient(os.Getenv("OPENAI_API_KEY"))
 
 	_, err := client.DeleteThread(context.Background(), thread_id)
 	if err != nil {
 		log.Println("Thread not deleted:", err)
+		return err
+	}
+
+	return nil
+}
+
+func delete_conversation(conversation Conversation) error {
+
+	err := delete_thread(conversation.ThreadID)
+
+	if err != nil {
+		return err
+	}
+
+	err = delete_assistant(conversation.AssistantID)
+
+	if err != nil {
 		return err
 	}
 

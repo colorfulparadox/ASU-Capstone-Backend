@@ -292,21 +292,21 @@ func Modify_Points(auth_token string, sentiment_points, sales_points, knowledge_
 	}
 	if Verify_Permissions(auth_token, set_self) {
 
-		user.Sentiment_Points += sentiment_points
+		user.Sentiment_Points = (user.Sentiment_Points + sentiment_points) / 2
 
 		// Minimum number of points is 0
 		if user.Sentiment_Points < 0 {
 			user.Sentiment_Points = 0
 		}
 
-		user.Sales_Points += sales_points
+		user.Sales_Points = (user.Sales_Points + sales_points) / 2
 
 		// Minimum number of points is 0
 		if user.Sales_Points < 0 {
 			user.Sales_Points = 0
 		}
 
-		user.Knowledge_Points += knowledge_points
+		user.Knowledge_Points = (user.Knowledge_Points + knowledge_points) / 2
 
 		// Minimum number of points is 0
 		if user.Knowledge_Points < 0 {

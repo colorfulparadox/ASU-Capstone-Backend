@@ -268,6 +268,8 @@ func create_conversation(assistant_id, message string) (openai.Run, error) {
 	var thread openai.ThreadRequest
 	var run openai.CreateThreadAndRunRequest
 
+	log.Println("Assistand ID: ", assistant_id, "Sending Message: ", message)
+
 	thread.Messages = []openai.ThreadMessage{
 		{
 			Role:    "user",
@@ -406,6 +408,8 @@ func delete_conversation(conversation Conversation) error {
 		return err
 	}
 
+	log.Println("Conversation deleted successfully")
+
 	return nil
 }
 
@@ -469,6 +473,8 @@ func get_all_conversations(username string) ([]Conversation, error) {
 	if err != nil {
 		log.Println("Error decoding JSON (EOF error is expected when creating a new file):", err)
 	}
+
+	log.Println("Conversations deleted successfully")
 
 	log.Println(conversations)
 

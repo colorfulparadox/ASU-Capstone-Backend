@@ -2,6 +2,7 @@ package routes_persona
 
 import (
 	"BackEnd/database"
+	"log"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
@@ -18,8 +19,10 @@ func Start_Conversation(gc *gin.Context) {
 		return
 	}
 
+	log.Println("Recieved Message: ", conversation.Message)
+
 	// Gets the enum int relating to results
-	conversation.Message, err = database.Start_Persona_Conversation(conversation.AuthID, conversation.Message, conversation.Instructions, conversation.ConversationID)
+	conversation.Message, err = database.Start_Persona_Conversation(conversation.AuthID, conversation.Instructions, conversation.Message, conversation.ConversationID)
 
 	new_conversation := Conversation{
 		Message:        conversation.Message,

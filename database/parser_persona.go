@@ -33,6 +33,8 @@ func Start_Persona_Conversation(authID, instructions, message, conversation_id s
 		return "", Error_With_External_Service()
 	}
 
+	log.Println("Assistand ID: ", assistant_id, "Parsing Message: ", message)
+
 	run, err := create_conversation(assistant_id, message)
 	if err != nil {
 		delete_assistant(assistant_id)

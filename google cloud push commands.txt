@@ -4,6 +4,6 @@ gcloud auth configure-docker us-central1-docker.pkg.dev
 
 commands to push docker image to google cloud
 
-docker build <IMAGE NAME> .
-docker tag backend us-central1-docker.pkg.dev/project-persona-436923/<FOLDER NAME>/<IMAGE NAME>
-docker push us-central1-docker.pkg.dev/project-persona-436923/<FOLDER NAME>/<IMAGE NAME>
+docker build -t backend-v2.0 .
+docker tag backend-v2.0 us-central1-docker.pkg.dev/project-persona-438218/backend/backend-v2.0
+docker push us-central1-docker.pkg.dev/project-persona-438218/backend/backend-v2.0

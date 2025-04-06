@@ -52,6 +52,9 @@ const (
 
 // Config options for some things in the program
 const (
+	// Number of days before a users authentication token will be forcibly reset by the database making users re-login
+	// A value of 0 will mean to disable timed force reset
+	Authentication_Token_Forced_Time_Reset = 0
 	// Amount of time in half seconds to wait for response to be completed before timing out
 	Completed_Timeout = 20
 	// Model that will run the interactions, list of models available here: https://platform.openai.com/docs/models

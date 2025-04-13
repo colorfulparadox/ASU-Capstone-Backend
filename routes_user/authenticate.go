@@ -42,9 +42,9 @@ func Authenticate(gc *gin.Context) {
 
 	returnUserData.Name = user.Name
 	returnUserData.Username = user.Username
-	returnUserData.Points = user.Sentiment_Points
-	returnUserData.Points = user.Sales_Points
-	returnUserData.Points = user.Knowledge_Points
+	returnUserData.Points += user.Sales_Points
+	returnUserData.Points += user.Knowledge_Points
+	returnUserData.Points += user.Sentiment_Points
 	returnUserData.PermissionLevel = user.PermissionLevel
 	returnUserData.Email = user.Email
 

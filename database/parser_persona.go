@@ -11,18 +11,6 @@ type Conversation struct {
 	RunID          string `json:"run_id"`
 }
 
-// func New_Persona(persona_name, ai_name, description, instructions string) error {
-// 	persona := Persona{
-// 		Name:         persona_name,
-// 		AIName:       ai_name,
-// 		Description:  description,
-// 		Instructions: instructions,
-// 	}
-
-// 	return create_persona(persona)
-// }
-
-// TODO: Finish function and possibly add ability to select specific persona model
 func Start_Persona_Conversation(authID, instructions, message, conversation_id string) (string, error) {
 	if !Verify_Permissions(authID, set_conversation) {
 		return "", Invalid_Permissions()
@@ -102,7 +90,6 @@ func Continue_Persona_Conversation(authID, message, conversation_id string) (str
 	return get_last_message(conversation)
 }
 
-// TODO: finish end persona conversation function
 func End_Persona_Conversation(authID, conversation_id string) error {
 	if !Verify_Permissions(authID, set_conversation) {
 		return Invalid_Permissions()
@@ -134,7 +121,6 @@ func End_Persona_Conversation(authID, conversation_id string) error {
 	return nil
 }
 
-// TODO: finish end all persona conversations function
 func End_All_Persona_Conversations(authID string) error {
 	if !Verify_Permissions(authID, set_conversation) {
 		return Invalid_Permissions()

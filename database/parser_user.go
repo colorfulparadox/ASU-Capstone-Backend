@@ -39,7 +39,7 @@ func Verify_User_Auth_Token(auth_token string) (User, error) {
 		return empty_user, err
 	}
 	if user.AuthToken == auth_token {
-		if user.DateExpr.After(time.Now().UTC()) && Authentication_Token_Forced_Time_Reset != 0 {
+		if user.DateExpr.After(time.Now().UTC()) || Authentication_Token_Forced_Time_Reset == 0 {
 			log.Printf("Verified Authentication of: %s\n", user.Username)
 			log.Printf("Passing Current User to Function\n")
 			return user, nil

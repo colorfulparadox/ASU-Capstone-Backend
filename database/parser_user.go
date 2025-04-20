@@ -75,7 +75,7 @@ func Get_User_List(auth_token string) [][]string {
 			return nil
 		}
 		for i := 0; i < len(userList); i++ {
-			users = append(users, []string{userList[i].Name, userList[i].Username, strconv.Itoa((userList[i].Sentiment_Points + userList[i].Sales_Points + userList[i].Knowledge_Points) / 3)})
+			users = append(users, []string{userList[i].Name, userList[i].Username, strconv.Itoa(userList[i].Sentiment_Points + userList[i].Sales_Points + userList[i].Knowledge_Points)})
 		}
 
 		log.Println("All users returned")
@@ -92,7 +92,7 @@ func Get_Admin_User_List(auth_token string) [][]string {
 			return nil
 		}
 		for i := 0; i < len(userList); i++ {
-			users = append(users, []string{userList[i].Name, userList[i].Username, userList[i].Email, strconv.Itoa(userList[i].PermissionLevel), strconv.Itoa(userList[i].Sentiment_Points), strconv.Itoa(userList[i].Sales_Points), strconv.Itoa(userList[i].Knowledge_Points)})
+			users = append(users, []string{userList[i].Name, userList[i].Username, userList[i].Email, strconv.Itoa(userList[i].PermissionLevel), strconv.Itoa(userList[i].Sentiment_Points + userList[i].Sales_Points + userList[i].Knowledge_Points)})
 		}
 	}
 

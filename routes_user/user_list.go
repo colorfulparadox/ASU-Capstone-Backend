@@ -46,7 +46,7 @@ func User_List(gc *gin.Context) {
 				gc.JSON(http.StatusForbidden, "{}")
 				return
 			}
-			userData.Average_Points, err = strconv.Atoi(users[i][2])
+			userData.Average_Points, err = strconv.Atoi(users[i][4])
 			if err != nil {
 				log.Println("Incorrect data from API parser:", err)
 				gc.Request.Header.Add("backend-error", "true")

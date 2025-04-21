@@ -98,3 +98,24 @@
 			"points": int: user points
 		}
 	]
+
+"/start_conversation" : 
+	{
+		"authID": "user auth id",
+		"instructions": "instructions for the AI",
+		"message": "message for the ai to respond to",
+		"conversationID": "unique user identifiable id to be used to continue conversation"
+	}
+
+"/continue_conversation" : 
+	{
+		"authID": "user auth id",
+		"message": "message for the ai to respond to",
+		"conversationID": "unique user identifiable id to be used to continue conversation"
+	}
+
+"/end_conversation" : 
+	{
+		"authID": "user auth id",
+		"conversationID": "unique user identifiable id to be used to continue conversation"
+	}
